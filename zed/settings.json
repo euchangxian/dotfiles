@@ -1,0 +1,55 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run the `zed: Open Default Settings` command
+// from the command palette
+{
+  "base_keymap": "JetBrains",
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "vim_mode": true,
+  "ui_font_size": 13,
+  "buffer_font_size": 13,
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "Atelier Sulphurpool Dark"
+  },
+  "terminal": {
+    "font_family": "MesloLGS NF",
+    "font_size": 13,
+    "default_height": 400
+  },
+  "inlay_hints": {
+    "enabled": true
+  },
+  "tabs": {
+    "git_status": true,
+    "file_icons": true
+  },
+  "autosave": "on_focus_change",
+  "languages": {
+    "C++": {
+      "format_on_save": "on",
+      "use_on_type_format": true
+    },
+    "Markdown": {
+      "format_on_save": "on",
+      "use_on_type_format": true
+    }
+  },
+  "lsp": {
+    "terraform-ls": {
+      "initialization_options": {
+        "experimentalFeatures": {
+          "prefillRequiredFields": true
+        }
+      }
+    }
+  }
+}
