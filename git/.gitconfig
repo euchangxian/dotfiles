@@ -1,0 +1,15 @@
+[user] # Personal git configurations
+	name = euchangxian
+	email = e0957388@u.nus.edu
+	signingkey = 483DE8ED0B928703
+[core]
+	excludesefile = /Users/euchangxian/.gitignore_global
+	editor = nvim
+[pager]
+	branch = false
+[alias]
+  ignore = update-index --assume-unchanged
+  unignore = update-index --no-assume-unchanged
+  ignored = !git ls-files -v | grep "^[[:lower:]]"
+[commit]
+	gpgsign = true
