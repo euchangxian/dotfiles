@@ -179,6 +179,6 @@ alias cpp="clang++ -std=c++20 -stdlib=libc++"
 alias jwt="jq -R 'split(".") | .[0,1] | @base64d | fromjson'"
 
 # Use eza instead of ls
-alias ls="eza --color=always --long --git --no-filesize --icons=always --no-time --no-user"
+alias ls="eza --grid --color=always --long --git --no-filesize --icons=always --no-time --no-user"
 # =============================================================================
 
