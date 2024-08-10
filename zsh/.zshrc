@@ -180,5 +180,8 @@ alias jwt="jq -R 'split(".") | .[0,1] | @base64d | fromjson'"
 
 # Use eza instead of ls
 alias ls="eza --grid --color=always --icons=always --long --git --no-filesize --no-time --no-user --no-permissions"
+
+# Use ripgrep case-insensitively by default
+alias rg="rg -i"
 # =============================================================================
 
