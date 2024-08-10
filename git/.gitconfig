@@ -1,15 +1,32 @@
 [user] # Personal git configurations
-	name = euchangxian
-	email = e0957388@u.nus.edu
-	signingkey = 483DE8ED0B928703
+  name = euchangxian
+  email = changxian2001@gmail.com
+
 [core]
-	excludesefile = /Users/euchangxian/.gitignore_global
-	editor = nvim
+  excludesefile = /Users/euchangxian/.gitignore_global
+  editor = nvim
+  pager = delta
+
 [pager]
-	branch = false
-[alias]
-  ignore = update-index --assume-unchanged
-  unignore = update-index --no-assume-unchanged
-  ignored = !git ls-files -v | grep "^[[:lower:]]"
-[commit]
-	gpgsign = true
+  branch = false
+
+[init]
+  defaultBranch=main
+
+[interactive]
+  diffFilter = delta --color-only
+
+[delta]
+  navigate = true # use n and N to move between diff sections
+  side-by-side = true
+
+  # delta detects terminal colors automatically; set one of those to disable auto-detection
+  # dark = true
+  # light = true
+
+[merge]
+  conflictstyle = diff3
+
+[diff]
+  colorMoved = default
+
