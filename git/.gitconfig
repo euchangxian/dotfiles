@@ -3,7 +3,7 @@
   email = changxian2001@gmail.com
 
 [core]
-  excludesefile = /Users/euchangxian/.gitignore_global
+  excludesfile = ~/.gitignore_global
   editor = nvim
   pager = delta
 
