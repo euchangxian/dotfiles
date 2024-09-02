@@ -8,7 +8,7 @@ fi
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
-plugins=()
+plugins=(colored-man-pages)
 
 # ============================ Init Shell =====================================
 # Oh-My-ZSH
@@ -20,6 +20,9 @@ source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
 
 # ZSH Auto Suggestions
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# Bind shift-tab to accept Auto Suggestions
+bindkey '^[[Z' autosuggest-accept
 
 # ZSH Syntax Highlighting
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
@@ -95,6 +98,28 @@ function _fzf_comprun() {
   esac
 }
 
+function runcpp() {
+    if [[ $# -eq 0 ]]; then
+        echo "Usage: runcpp <FILE_NAME.cpp>"
+        return 1
+    fi
+
+    local cpp_file="$1"
+    local executable="${cpp_file%.cpp}"
+
+    # Compile the C++ file
+    if clangpp -o "$executable" "$cpp_file"; then
+        # Run the executable
+        ./"$executable"
+        
+        # Delete the executable
+        rm "$executable"
+    else
+        echo "Compilation failed"
+        return 1
+    fi
+}
+
 # =============================================================================
 #                             PATH/Bin Variables/Other Exports
 # =============================================================================
@@ -161,7 +186,6 @@ if [ -f "/Users/euchangxian/miniforge3/etc/profile.d/mamba.sh" ]; then
 fi
 # <<< conda initialize <<<
 
-
 # ============================== Alias Definitions ============================
 # Use neo-vim by default
 alias vim="nvim"
@@ -170,10 +194,13 @@ alias vim="nvim"
 alias cat="bat"
 
 # Compile C++ with GCC
-alias gpp="g++-14 -std=c++20 -O3 -march=native"
+alias gpp="g++-14 -std=c++17 stdlib=libc++ -O3 -pthread"
 
 # Compile C++ files with clang++
 alias cpp="clang++ -std=c++20 -stdlib=libc++"
+
+# CS3210
+alias clangpp="clang++ -std=c++17 -stdlib=libc++ -pthread -O3 -g"
 
 # Decode JWT Tokens
 alias jwt="jq -R 'split(".") | .[0,1] | @base64d | fromjson'"
