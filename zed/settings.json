@@ -15,6 +15,7 @@
   "vim_mode": true,
   "ui_font_size": 13,
   "buffer_font_size": 13,
+  "tab_size": 2,
   "theme": {
     "mode": "system",
     "light": "One Light",
@@ -23,7 +24,7 @@
   "terminal": {
     "font_family": "MesloLGS NF",
     "font_size": 13,
-    "default_height": 400
+    "default_height": 300
   },
   "inlay_hints": {
     "enabled": true

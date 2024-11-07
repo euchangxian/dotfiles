@@ -108,7 +108,7 @@ function runcpp() {
     local executable="${cpp_file%.cpp}"
 
     # Compile the C++ file
-    if clangpp -o "$executable" "$cpp_file"; then
+    if g++-14 -O3 -o "$executable" "$cpp_file"; then
         # Run the executable
         ./"$executable"
         
@@ -123,11 +123,17 @@ function runcpp() {
 # =============================================================================
 #                             PATH/Bin Variables/Other Exports
 # =============================================================================
+# Add homebrew binaries to PATH
+export PATH=/opt/homebrew/bin:$PATH
+
 # Set GOROOT
 export GOROOT=/opt/homebrew/opt/go/libexec
 
 # Add GOBIN to PATH
 export PATH=$PATH:$HOME/go/bin
+
+# Use GCC
+export PATH=/usr/local/bin:$PATH
 
 # Add NVM to PATH
 export NVM_DIR="$HOME/.nvm"
@@ -147,12 +153,22 @@ export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
 # OpenSSL
 export PATH="/opt/homebrew/opt/openssl@3.0/bin:$PATH"
 
+# GNU-time
+export PATH="/opt/homebrew/opt/gnu-time/libexec/gnubin:$PATH"
+
+export LDFLAGS="-L/usr/local/opt/openssl/lib"
+export CPPFLAGS="-I/usr/local/opt/openssl/include"
+
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="/Users/euchangxian/.sdkman"
 [[ -s "/Users/euchangxian/.sdkman/bin/sdkman-init.sh" ]] && source "/Users/euchangxian/.sdkman/bin/sdkman-init.sh"
 
 # GitLab GPG Key compatibility with Powerlevel10k
 export GPG_TTY=$(tty)
+
+# Use NVIm as man pager
+export MANPAGER='nvim +Man!'
+export MANWIDTH=999
 
 # Bat Theme
 export BAT_THEME=tokyonight_night
@@ -194,13 +210,13 @@ alias vim="nvim"
 alias cat="bat"
 
 # Compile C++ with GCC
-alias gpp="g++-14 -std=c++17 stdlib=libc++ -O3 -pthread"
+alias gpp="g++-14 -std=c++20 stdlib=libc++ -O3" 
 
 # Compile C++ files with clang++
 alias cpp="clang++ -std=c++20 -stdlib=libc++"
 
 # CS3210
-alias clangpp="clang++ -std=c++17 -stdlib=libc++ -pthread -O3 -g"
+alias clangpp="clang++ -std=c++20 -stdlib=libc++ -pthread -O3"
 
 # Decode JWT Tokens
 alias jwt="jq -R 'split(".") | .[0,1] | @base64d | fromjson'"
@@ -210,5 +226,7 @@ alias ls="eza --grid --color=always --icons=always --long --git --no-filesize --
 
 # Use ripgrep case-insensitively by default
 alias rg="rg -i"
+
+alias gfixup="git add . && git commit -m 'fixup' && git rebase -i HEAD~2"
 # =============================================================================
 
