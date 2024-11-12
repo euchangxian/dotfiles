@@ -12,7 +12,7 @@ vim.g.autoformat = true
 -- Can be one of: telescope, fzf
 -- Leave it to "auto" to automatically use the picker
 -- enabled with `:LazyExtras`
-vim.g.lazyvim_picker = "auto"
+vim.g.lazyvim_picker = "fzf"
 
 -- LazyVim root dir detection
 -- Each entry can be:
@@ -30,12 +30,6 @@ vim.g.root_spec = { "lsp", { ".git", "lua" }, "cwd" }
 -- WARN: on Windows you might want to set `editPreset: "nvim"` due to
 -- this issue https://github.com/jesseduffield/lazygit/issues/3467
 vim.g.lazygit_config = true
-
--- Options for the LazyVim statuscolumn
-vim.g.lazyvim_statuscolumn = {
-  folds_open = false, -- show fold sign when fold is open
-  folds_githl = false, -- highlight fold sign with git sign color
-}
 
 -- Optionally setup the terminal to use
 -- This sets `vim.o.shell` and does some additional configuration for:
@@ -101,7 +95,7 @@ opt.shiftwidth = 2 -- Size of an indent
 opt.shortmess:append({ W = true, I = true, c = true, C = true })
 opt.showmode = false -- Dont show mode since we have a statusline
 opt.sidescrolloff = 8 -- Columns of context
-opt.signcolumn = "yes:3" -- Always show the signcolumn, otherwise it would shift the text each time
+opt.signcolumn = "yes:2" -- Always show the signcolumn, otherwise it would shift the text each time
 opt.colorcolumn = "80"
 opt.smartcase = true -- Don't ignore case with capitals
 opt.smartindent = true -- Insert indents automatically
@@ -110,7 +104,6 @@ opt.spelloptions:append("noplainbuffer")
 opt.splitbelow = true -- Put new windows below current
 opt.splitkeep = "screen"
 opt.splitright = true -- Put new windows right of current
-opt.statuscolumn = [[%!v:lua.require'lazyvim.util'.ui.statuscolumn()]]
 opt.tabstop = 2 -- Number of spaces tabs count for
 opt.termguicolors = true -- True color support
 opt.timeoutlen = vim.g.vscode and 1000 or 300 -- Lower than default (1000) to quickly trigger which-key
