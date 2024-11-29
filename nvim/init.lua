@@ -1,10 +1,25 @@
 -- bootstrap lazy.nvim, LazyVim and your plugins
 require("config.lazy")
 
+-- Function to detect if we're in a CodeForces directory
+local function is_codeforces_directory()
+  local current_dir = vim.fn.getcwd()
+  return string.match(current_dir, "CodeForces/?$") -- Main CodeForces directory
+    or string.match(current_dir, "CodeForces/[^/]+/?$") -- Any subdirectory under CodeForces
+end
+
 -- Function to insert C++ template
 local function insert_cpp_template()
-  local file_path = vim.fn.expand("~/.config/nvim/templates/cpp_template.cpp")
-  vim.api.nvim_command("0r " .. file_path)
+  local template_path
+
+  if is_codeforces_directory() then
+    template_path = vim.fn.expand("~/.config/nvim/templates/codeforces_template.cpp")
+  else
+    -- Default to a basic template if not in CodeForces directory
+    template_path = vim.fn.expand("~/.config/nvim/templates/cpp_template.cpp")
+  end
+
+  vim.api.nvim_command("0r " .. template_path)
   -- Add any dynamic replacements here
   -- Example:
   -- vim.api.nvim_command('silent! execute "0,%s/%AUTHOR%/Your Name/e"')
