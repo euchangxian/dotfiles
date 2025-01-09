@@ -1,11 +1,18 @@
 -- bootstrap lazy.nvim, LazyVim and your plugins
 require("config.lazy")
 
--- Function to detect if we're in a CodeForces directory
 local function is_codeforces_directory()
   local current_dir = vim.fn.getcwd()
   return string.match(current_dir, "CodeForces/?$") -- Main CodeForces directory
     or string.match(current_dir, "CodeForces/[^/]+/?$") -- Any subdirectory under CodeForces
+end
+
+local function is_cs3233_kattis_directory()
+  local current_dir = vim.fn.getcwd()
+  return string.match(current_dir, "CS3233/ProblemSets?$") -- ProblemSets Directory
+    or string.match(current_dir, "CS3233/ProblemSets/[^/]+/?$") -- Any subdirectory
+    or string.match(current_dir, "OpenKattis/?$") -- OpenKattis directory
+    or string.match(current_dir, "OpenKattis/[^/]+/?$") -- Any subdirectory under OpenKattis
 end
 
 -- Function to insert C++ template
@@ -14,8 +21,9 @@ local function insert_cpp_template()
 
   if is_codeforces_directory() then
     template_path = vim.fn.expand("~/.config/nvim/templates/codeforces_template.cpp")
+  elseif is_cs3233_kattis_directory() then
+    template_path = vim.fn.expand("~/.config/nvim/templates/kattis_template.cpp")
   else
-    -- Default to a basic template if not in CodeForces directory
     template_path = vim.fn.expand("~/.config/nvim/templates/cpp_template.cpp")
   end
 

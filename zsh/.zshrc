@@ -53,22 +53,6 @@ function clip () {
   cat $1 | pbcopy
 }
 
-# Adds the module to mod.rs, then opens the file in Vim
-function vimr() {
-  if [ "$#" -ne 1 ]; then
-    echo "usage: vimr FILE_NAME"
-    return 1
-  fi
-  # Get the filename without the .rs extension
-  local module_name="${1%.rs}"
-
-  # Append the module to mod.rs
-  echo "pub mod $module_name;" >> mod.rs
-
-  # Open the file in Vim
-  vim "$1"
-}
-
 # FZF (Fuzzy Finder) Functions
 # Use fd (https://github.com/sharkdp/fd) for listing path candidates.
 # - The first argument to the function ($1) is the base path to start traversal
@@ -107,8 +91,8 @@ function runcpp() {
     local cpp_file="$1"
     local executable="${cpp_file%.cpp}"
 
-    # Compile the C++ file
-    if g++-14 -O3 -o "$executable" "$cpp_file"; then
+    # Compile C++ file
+    if g++-14 -std=c++20 -O3 -o "$executable" "$cpp_file"; then
         # Run the executable
         ./"$executable"
         
@@ -118,6 +102,25 @@ function runcpp() {
         echo "Compilation failed"
         return 1
     fi
+}
+
+# Function to sync a directory with a remote host using fswatch
+syncdir() {
+    local LOCAL_DIR="$1"    # Local directory path to watch
+    local REMOTE_DIR="$2"   # Remote directory path to sync with
+
+    if [[ -z "$LOCAL_DIR" || -z "$REMOTE_DIR" ]]; then
+        echo "Usage: syncdir <local_directory> <remote_directory>"
+        return 1
+    fi
+
+    echo "Starting to watch $LOCAL_DIR and sync with $REMOTE_DIR on remote host..."
+
+    # Start fswatch to monitor changes and sync with remote host
+    fswatch -o "$LOCAL_DIR" | while read change; do
+        rsync -avz --exclude='.git/' "$LOCAL_DIR/" "$REMOTE_DIR"
+        echo "Synced changes from $LOCAL_DIR to $REMOTE_DIR"
+    done
 }
 
 # =============================================================================
@@ -224,9 +227,14 @@ alias jwt="jq -R 'split(".") | .[0,1] | @base64d | fromjson'"
 # Use eza instead of ls
 alias ls="eza --grid --color=always --icons=always --long --git --no-filesize --no-time --no-user --no-permissions"
 
+# cd to Git Repository Project root
+alias cdr="cd $(git rev-parse --show-toplevel)"
+
 # Use ripgrep case-insensitively by default
 alias rg="rg -i"
 
 alias gfixup="git add . && git commit -m 'fixup' && git rebase -i HEAD~2"
 # =============================================================================
 
+# Forgot what was this for...
+. "$HOME/.local/bin/env"
