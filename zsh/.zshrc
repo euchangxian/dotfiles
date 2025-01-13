@@ -82,6 +82,14 @@ function _fzf_comprun() {
   esac
 }
 
+function jwt() {
+    if [ -z "$1" ]; then
+        echo "Usage: jwt <token>"
+        return 1
+    fi
+    echo "$1" | jq -R 'split(".") | .[0,1] | @base64d | fromjson' 2>/dev/null || echo "Invalid JWT token"
+}
+
 function runcpp() {
     if [[ $# -eq 0 ]]; then
         echo "Usage: runcpp <FILE_NAME.cpp>"
@@ -105,7 +113,7 @@ function runcpp() {
 }
 
 # Function to sync a directory with a remote host using fswatch
-syncdir() {
+function syncdir() {
     local LOCAL_DIR="$1"    # Local directory path to watch
     local REMOTE_DIR="$2"   # Remote directory path to sync with
 
@@ -207,33 +215,30 @@ fi
 
 # ============================== Alias Definitions ============================
 # Use neo-vim by default
-alias vim="nvim"
+alias vim='nvim'
 
 # Use bat instead of built-in cat
-alias cat="bat"
+alias cat='bat'
 
 # Compile C++ with GCC
-alias gpp="g++-14 -std=c++20 stdlib=libc++ -O3" 
+alias gpp='g++-14 -std=c++20 stdlib=libc++ -O3' 
 
 # Compile C++ files with clang++
-alias cpp="clang++ -std=c++20 -stdlib=libc++"
+alias cpp='clang++ -std=c++20 -stdlib=libc++'
 
 # CS3210
-alias clangpp="clang++ -std=c++20 -stdlib=libc++ -pthread -O3"
-
-# Decode JWT Tokens
-alias jwt="jq -R 'split(".") | .[0,1] | @base64d | fromjson'"
+alias clangpp='clang++ -std=c++20 -stdlib=libc++ -pthread -O3'
 
 # Use eza instead of ls
-alias ls="eza --grid --color=always --icons=always --long --git --no-filesize --no-time --no-user --no-permissions"
+alias ls='eza --grid --color=always --icons=always --long --git --no-filesize --no-time --no-user --no-permissions'
 
 # cd to Git Repository Project root
-alias cdr="cd $(git rev-parse --show-toplevel)"
+alias cdr='cd $(git rev-parse --show-toplevel)'
 
 # Use ripgrep case-insensitively by default
-alias rg="rg -i"
+alias rg='rg -i'
 
-alias gfixup="git add . && git commit -m 'fixup' && git rebase -i HEAD~2"
+alias gfixup='git add . && git commit -m 'fixup' && git rebase -i HEAD~2'
 # =============================================================================
 
 # Forgot what was this for...
