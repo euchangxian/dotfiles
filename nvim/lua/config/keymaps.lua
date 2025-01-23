@@ -1,3 +1,16 @@
--- Keymaps are automatically loaded on the VeryLazy event
--- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
--- Add any additional keymaps here
+local function paste_template(template_name)
+  local template_path = vim.fn.stdpath("config") .. "/templates/" .. template_name
+  local file, err = io.open(template_path, "r")
+  if file then
+    local content = file:read("*all")
+    file:close()
+    local lines = vim.fn.split(content, "\n")
+    vim.api.nvim_put(lines, "l", true, true)
+  else
+    vim.notify("Failed to load template: " .. template_name .. ". Error: " .. err, vim.log.levels.ERROR)
+  end
+end
+
+vim.keymap.set("n", "<leader>tu", function()
+  paste_template("UnionFind.cpp")
+end, { desc = "Paste UnionFind template" })

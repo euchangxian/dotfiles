@@ -9,6 +9,8 @@
 #include <deque>
 #include <functional>
 #include <iostream>
+#include <istream>
+#include <iterator>
 #include <map>
 #include <numeric>
 #include <queue>

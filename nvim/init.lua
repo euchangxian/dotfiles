@@ -9,8 +9,10 @@ end
 
 local function is_cs3233_kattis_directory()
   local current_dir = vim.fn.getcwd()
-  return string.match(current_dir, "CS3233/ProblemSets?$") -- ProblemSets Directory
-    or string.match(current_dir, "CS3233/ProblemSets/[^/]+/?$") -- Any subdirectory
+  return string.match(current_dir, "CS3233/?$")
+    or string.match(current_dir, "CS3233/[^/]+/?$")
+    or string.match(current_dir, "CS3233/ProblemSets/?$")
+    or string.match(current_dir, "CS3233/ProblemSets/[^/]+/?$")
     or string.match(current_dir, "OpenKattis/?$") -- OpenKattis directory
     or string.match(current_dir, "OpenKattis/[^/]+/?$") -- Any subdirectory under OpenKattis
 end

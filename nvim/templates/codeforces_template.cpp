@@ -5,11 +5,13 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <deque>
 #include <functional>
 #include <ios>
 #include <iostream>
+#include <istream>
 #include <iterator>
 #include <map>
 #include <numeric>
