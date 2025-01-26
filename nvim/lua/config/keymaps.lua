@@ -14,3 +14,15 @@ end
 vim.keymap.set("n", "<leader>tu", function()
   paste_template("UnionFind.cpp")
 end, { desc = "Paste UnionFind template" })
+
+vim.keymap.set("n", "<leader>tq", function()
+  paste_template("CircularQueue.cpp")
+end, { desc = "Paste CircularQueue template" })
+
+vim.keymap.set("n", "<leader>tf", function()
+  paste_template("FenwickTree.cpp")
+end, { desc = "Paste Fenwick Tree template" })
+
+vim.keymap.set("n", "<leader>ts", function()
+  paste_template("SegmentTree.cpp")
+end, { desc = "Paste Segment Tree template" })
