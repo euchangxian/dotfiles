@@ -9,13 +9,16 @@
 #include <cstdlib>
 #include <deque>
 #include <functional>
+#include <iomanip>
 #include <ios>
 #include <iostream>
 #include <istream>
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <ostream>
 #include <queue>
+#include <ranges>
 #include <set>
 #include <span>
 #include <stack>
@@ -27,15 +30,7 @@
 #include <vector>
 
 using i64 = long long;
-
 constexpr int MOD = 1'000'000'007;
-
-constexpr std::array<std::array<int, 2>, 4> directions{{
-    {0, 1},
-    {1, 0},
-    {0, -1},
-    {-1, 0},
-}};
 
 void solve() {
   //
