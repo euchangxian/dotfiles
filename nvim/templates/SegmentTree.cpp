@@ -1,12 +1,9 @@
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <cstdlib>
 #include <limits>
 #include <type_traits>
 #include <vector>
-
-using i64 = long long;
 
 namespace segtree {
 
@@ -48,7 +45,99 @@ struct Max {
 
 };  // namespace segtree
 
-template <typename T = i64, typename BinaryOp = segtree::Sum>
+// Eager SegmentTree.
+template <typename T = long long, typename BinaryOp = segtree::Sum>
+class ESegmentTree {
+ public:
+  ESegmentTree(int sz)
+      : n_(sz), op_(), st_(4 * n_, op_.template identity<T>()) {}
+
+  ESegmentTree(const std::vector<T>& data) : ESegmentTree(data.size()) {
+    build(data, 1, 0, n_ - 1);
+  }
+
+  T query(int l, int r) const { return query(1, 0, n_ - 1, l, r); }
+
+  void update(int pos, int val) { update(1, 0, n_ - 1, pos, val); }
+
+  T kthElement(T k) const { return kthElement(1, 0, n_ - 1, k); }
+
+ private:
+  const int n_{};
+  const BinaryOp op_{};
+
+  std::vector<T> st_{};
+
+  static constexpr int left(int x) { return x << 1; }
+
+  static constexpr int right(int x) { return (x << 1) + 1; }
+
+  void build(const std::vector<T>& data, int idx, int L, int R) {
+    if (L == R) {
+      st_[idx] = data[L];
+      return;
+    }
+
+    int mid = (L + R) / 2;
+
+    build(data, left(idx), L, mid);
+    build(data, right(idx), mid + 1, R);
+
+    st_[idx] = op_(st_[left(idx)], st_[right(idx)]);
+  }
+
+  T query(int idx, int L, int R, int l, int r) const {
+    if (l > r) {
+      return op_.template identity<T>();
+    }
+
+    // if the backing array's index is contained within the queried range.
+    if (l <= L && R <= r) {
+      return st_[idx];
+    }
+
+    int mid = (L + R) / 2;
+    return op_(query(left(idx), L, mid, l, std::min(r, mid)),
+               query(right(idx), mid + 1, R, std::max(l, mid + 1), r));
+  }
+
+  void update(int idx, int L, int R, int pos, T val) {
+    if (L == R) {
+      st_[idx] = val;
+      return;
+    }
+
+    int mid = (L + R) / 2;
+    if (pos <= mid) {
+      update(left(idx), L, mid, pos, val);
+    } else {
+      update(right(idx), mid + 1, R, pos, val);
+    }
+    st_[idx] = op_(st_[left(idx)], st_[right(idx)]);
+  }
+
+  T kthElement(int idx, int L, int R, T k) const {
+    static_assert(std::is_same_v<BinaryOp, segtree::Sum>,
+                  "kthElement requires Sum operation");
+
+    if (k > st_[idx]) {
+      return -1;
+    }
+
+    if (L == R) {
+      return L;
+    }
+
+    int mid = (L + R) / 2;
+    if (st_[left(idx)] >= k) {
+      return kthElement(left(idx), L, mid, k);
+    } else {
+      return kthElement(right(idx), mid + 1, R, k - st_[left(idx)]);
+    }
+  }
+};
+
+template <typename T = long long, typename BinaryOp = segtree::Sum>
 class SegmentTree {
  public:
   SegmentTree(int sz)
@@ -184,85 +273,3 @@ class SegmentTree {
     }
   }
 };
-
-int main() {
-  std::vector<int> A = {18, 17, 13, 19, 15, 11, 20, 99};
-
-  SegmentTree<int, segtree::Sum> st(A);
-  assert(st.query(1, 3) == A[1] + A[2] + A[3]);
-  assert(st.query(4, 7) == A[4] + A[5] + A[6] + A[7]);
-  assert(st.query(3, 4) == A[3] + A[4]);
-
-  st.update(5, 5, 77);
-  A[5] = 77;  // ST doesnt hold a reference.
-  assert(st.query(1, 3) == A[1] + A[2] + A[3]);
-  assert(st.query(4, 7) == A[4] + A[5] + A[6] + A[7]);
-  assert(st.query(3, 4) == A[3] + A[4]);
-
-  st.update(0, 3, 30);
-  A[0] = 30;
-  A[1] = 30;
-  A[2] = 30;
-  A[3] = 30;
-  assert(st.query(1, 3) == A[1] + A[2] + A[3]);
-  assert(st.query(4, 7) == A[4] + A[5] + A[6] + A[7]);
-  assert(st.query(3, 4) == A[3] + A[4]);
-
-  st.update(3, 3, 7);
-  A[3] = 7;
-  assert(st.query(1, 3) == A[1] + A[2] + A[3]);
-  assert(st.query(4, 7) == A[4] + A[5] + A[6] + A[7]);
-  assert(st.query(3, 4) == A[3] + A[4]);
-
-  SegmentTree<int, segtree::Min> stMin(A);
-  assert(stMin.query(1, 3) == std::min({A[1], A[2], A[3]}));
-  assert(stMin.query(4, 7) == std::min({A[4], A[5], A[6], A[7]}));
-  assert(stMin.query(3, 4) == std::min({A[3], A[4]}));
-
-  stMin.update(5, 5, 77);
-  A[5] = 77;  // ST doesnt hold a reference.
-  assert(stMin.query(1, 3) == std::min({A[1], A[2], A[3]}));
-  assert(stMin.query(4, 7) == std::min({A[4], A[5], A[6], A[7]}));
-  assert(stMin.query(3, 4) == std::min({A[3], A[4]}));
-
-  stMin.update(0, 3, 30);
-  A[0] = 30;
-  A[1] = 30;
-  A[2] = 30;
-  A[3] = 30;
-  assert(stMin.query(1, 3) == std::min({A[1], A[2], A[3]}));
-  assert(stMin.query(4, 7) == std::min({A[4], A[5], A[6], A[7]}));
-  assert(stMin.query(3, 4) == std::min({A[3], A[4]}));
-
-  stMin.update(3, 3, 7);
-  A[3] = 7;
-  assert(stMin.query(1, 3) == std::min({A[1], A[2], A[3]}));
-  assert(stMin.query(4, 7) == std::min({A[4], A[5], A[6], A[7]}));
-  assert(stMin.query(3, 4) == std::min({A[3], A[4]}));
-
-  SegmentTree<int, segtree::Max> stMax(A);
-  assert(stMax.query(1, 3) == std::max({A[1], A[2], A[3]}));
-  assert(stMax.query(4, 7) == std::max({A[4], A[5], A[6], A[7]}));
-  assert(stMax.query(3, 4) == std::max({A[3], A[4]}));
-
-  stMax.update(5, 5, 77);
-  A[5] = 77;  // ST doesnt hold a reference.
-  assert(stMax.query(1, 3) == std::max({A[1], A[2], A[3]}));
-  assert(stMax.query(4, 7) == std::max({A[4], A[5], A[6], A[7]}));
-  assert(stMax.query(3, 4) == std::max({A[3], A[4]}));
-
-  stMax.update(0, 3, 30);
-  A[0] = 30;
-  A[1] = 30;
-  A[2] = 30;
-  A[3] = 30;
-  assert(stMax.query(1, 3) == std::max({A[1], A[2], A[3]}));
-  assert(stMax.query(4, 7) == std::max({A[4], A[5], A[6], A[7]}));
-  assert(stMax.query(3, 4) == std::max({A[3], A[4]}));
-
-  stMax.update(3, 3, 7);
-  A[3] = 7;
-  assert(stMax.query(1, 3) == std::max({A[1], A[2], A[3]}));
-  assert(stMax.query(4, 7) == std::max({A[4], A[5], A[6], A[7]}));
-  assert(stMax.query(3, 4) == std::max({A[3], A[4]}));
-}

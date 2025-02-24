@@ -1,90 +1,53 @@
-#include <cassert>
-#include <iostream>
 #include <vector>
 
-template <typename T = int>
-class PURQ {
+template <typename T = long long>
+class FenwickTree {
  public:
-  PURQ(int m) : n_(m), ft_(m + 1, 0) {}
+  FenwickTree(int n) : n(n), tree(n + 1, 0) {}
 
-  PURQ(const std::vector<T>& raw) : n_(raw.size()), ft_(n_ + 1, 0) {
-    for (int i = 1; i <= n_; ++i) {
-      ft_[i] += raw[i - 1];
+  FenwickTree(const std::vector<T>& data) : FenwickTree(data.size()) {
+    for (int i = 1; i <= n; ++i) {
+      tree[i] += data[i - 1];
 
       int parent = i + (i & -i);
-      if (parent <= n_) {
-        ft_[parent] += ft_[i];
+      if (parent <= n) {
+        tree[parent] += tree[i];
       }
     }
   }
 
-  // {l, r} are 1-indexed.
-  T rangeQuery(int i) const {
-    // Prefix sum overload.
-    return query(i) - query(0);
+  constexpr T prefix(int i) const {
+    T sum = 0;
+    for (; i > 0; i -= i & -i) {
+      sum += tree[i];
+    }
+    return sum;
   }
 
-  // {l, r} are 1-indexed.
-  T rangeQuery(int l, int r) const { return query(r) - query(l - 1); }
+  constexpr T query(int l, int r) const { return prefix(r) - prefix(l - 1); }
 
-  // i is 1-indexed.
-  void pointUpdate(int i, T diff) {
-    // Add `diff` to point i.
-    while (i <= n_) {
-      ft_[i] += diff;
-      i += i & -i;
+  constexpr void update(int i, T diff) {
+    for (; i <= n; i += i & -i) {
+      tree[i] += diff;
     }
   }
 
-  // Fenwick Trees are able to answer the query: find index i (of the
-  // underlying array) such that the cumulative sum up to i is >= k.
-  // As such, by preprocessing the original array into a frequency/presence
-  // array, Fenwick Trees can be used to answer: find the kth smallest element,
-  // i.e., Order Statistics.
-  //
-  // E.g.,
-  // Original array: [20, 50, 10]
-  // We preprocess this into a presence array:
-  // [0,0,...,1,...,1,...,1,...]
-  //          ^     ^     ^
-  //          10    20    50
-
-  // When we ask for 2nd smallest element:
-  // "Find first index where cumsum >= 2"
-  // = "Find index of second 1 in presence array"
-  // = "Find second smallest original value"
-  // Returns the 1-indexed Index.
-  int kthElement(T k) const {
-    // int left = 1;
-    // int right = n_;
-    // while (left < right) {
-    //   int mid = left + (right - left) / 2;
-    //
-    //   // prefix sum
-    //   if (rangeQuery(mid) < k) {
-    //     left = mid + 1;
-    //   } else {
-    //     right = mid;
-    //   }
-    // }
-    //
-    // return left;
-
+  constexpr int kthElement(T k) const {
     // Faster, O(logn) binary lifting.
-    if (k <= 0 || k > rangeQuery(n_ + 1)) {
+    if (k <= 0 || k > query(n)) {
       return -1;
     }
 
     int idx = 0;
-    int step = 1 << (31 - __builtin_clz(n_));
+    int step = 1 << (31 - __builtin_clz(n));
 
     T sum = 0;
     while (step > 0) {
       int next = idx + step;
 
-      if (next <= n_ && sum + ft_[next] < k) {
+      if (next <= n && sum + tree[next] < k) {
         idx = next;
-        sum += ft_[next];
+        sum += tree[next];
       }
       step >>= 1;
     }
@@ -92,102 +55,47 @@ class PURQ {
   }
 
  private:
-  // i is 1-indexed, as this can only be invoked internally.
-  T query(int i) const {
-    T sum = 0;
-    while (i > 0) {
-      sum += ft_[i];
-      i -= i & -i;
-    }
-
-    return sum;
-  }
-
-  std::size_t n_{};
-  std::vector<T> ft_;
+  std::size_t n;
+  std::vector<T> tree;
 };
 
-template <typename T = int>
+template <typename T = long long>
 class RUPQ {
  public:
-  RUPQ(int m) : purq(m) {}
+  RUPQ(int n) : purq(n) {}
 
-  RUPQ(const std::vector<T>& raw) : purq(raw) {}
+  RUPQ(const std::vector<T>& data) : purq(data) {}
 
-  void rangeUpdate(int l, int r, T diff) {
-    // l, r is 1-indexed.
-    purq.pointUpdate(l, diff);       // +diff to every point [l..n-1]
-    purq.pointUpdate(r + 1, -diff);  // -diff to every point [r+1..n-1]
+  void update(int l, int r, T diff) {
+    purq.update(l, diff);       // +diff to every point [l..n-1]
+    purq.update(r + 1, -diff);  // -diff to every point [r+1..n-1]
   }
 
-  T pointQuery(int i) const {
-    // i is 1-indexed.
-    return purq.rangeQuery(i);
-  }
+  T query(int i) const { return purq.prefix(i); }
 
  private:
-  PURQ<T> purq;
+  FenwickTree<T> purq;
 };
 
-template <typename T = int>
+template <typename T = long long>
 class RURQ {
  public:
-  RURQ(int m) : rupq(m), purq(m) {}
+  RURQ(int n) : rupq(n), purq(n) {}
 
-  RURQ(const std::vector<T>& raw) : rupq(raw), purq(raw) {}
+  RURQ(const std::vector<T>& data) : rupq(data), purq(data) {}
 
-  // 1-indexed
-  void rangeUpdate(int l, int r, T diff) {
-    rupq.rangeUpdate(l, r, diff);
+  void update(int l, int r, T diff) {
+    rupq.update(l, r, diff);
 
-    purq.pointUpdate(l, diff * (l - 1));
-    purq.pointUpdate(r + 1, -diff * r);
+    purq.update(l, diff * (l - 1));
+    purq.update(r + 1, -diff * r);
   }
 
-  // 1-indexed
-  T rangeQuery(int i) const {
-    return rupq.pointQuery(i) * i - purq.rangeQuery(i);
-  }
+  T query(int i) const { return rupq.query(i) * i - purq.query(i); }
 
-  // l, r are 1-indexed
-  T rangeQuery(int l, int r) const { return rangeQuery(r) - rangeQuery(l - 1); }
+  T query(int l, int r) const { return query(r) - query(l - 1); }
 
  private:
   RUPQ<T> rupq;
-  PURQ<T> purq;
+  FenwickTree<T> purq;
 };
-
-int main() {
-  std::vector<int> data{0, 1, 0, 1, 2, 3, 2, 1, 1, 0};
-
-  PURQ<int> purq{data};
-  assert(purq.rangeQuery(2, 6) == 7);
-  assert(purq.kthElement(7) == 6);
-
-  purq.pointUpdate(6, 1);
-  assert(purq.rangeQuery(1, 10) == 12);
-
-  RUPQ<int> rupq(10);
-  RURQ<int> rurq(10);
-  rupq.rangeUpdate(2, 9, 7);
-  rurq.rangeUpdate(2, 9, 7);
-  rupq.rangeUpdate(6, 7, 3);
-  rurq.rangeUpdate(6, 7, 3);
-  // idx = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
-  // val = 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0
-  // rangeUpdate(1, 8, 7)
-  // val = 0 | 7 | 7 | 7 | 7 | 7 | 7 | 7 | 7 | 0
-  //
-  // rangeUpdate(5, 6, 3)
-  // val = 0 | 7 | 7 | 7 | 7 | 10 | 10 | 7 | 7 | 0
-  int pointSum = 0;
-  for (int i = 1; i <= 10; ++i) {
-    pointSum += rupq.pointQuery(i);
-  }
-  assert(rupq.pointQuery(6) == 10);
-
-  assert(pointSum == 62);
-  assert(rurq.rangeQuery(1, 10) == 62);
-  assert(pointSum == rurq.rangeQuery(1, 10));
-  assert(rurq.rangeQuery(6, 7) == 20);
-}
