@@ -1,4 +1,3 @@
-#include <cstddef>
 #include <utility>
 #include <vector>
 
@@ -53,4 +52,3 @@ class UnionFind {
   std::vector<int> rank_;
   std::vector<int> size_;
 };
-
