@@ -44,6 +44,17 @@ vim.api.nvim_create_autocmd("BufNewFile", {
   callback = insert_cpp_template,
 })
 
+vim.api.nvim_create_autocmd({ "FileType" }, {
+  callback = function()
+    if require("nvim-treesitter.parsers").has_parser() then
+      vim.opt.foldmethod = "expr"
+      vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+    else
+      vim.opt.foldmethod = "syntax"
+    end
+  end,
+})
+
 -- Lspsaga keymaps
 vim.keymap.set("n", "gd", "<cmd>Lspsaga goto_definition<CR>")
 vim.keymap.set("n", "gR", "<cmd>Lspsaga peek_definition<CR>")
