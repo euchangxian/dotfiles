@@ -31,6 +31,10 @@ vim.keymap.set("n", "<leader>ts", function()
   paste_template("SegmentTree.cpp")
 end, { desc = "Paste Segment Tree template" })
 
-vim.keymap.set("n", "<leader>tm", function()
+vim.keymap.set("n", "<leader>tM", function()
   paste_template("MaxFlow.cpp")
 end, { desc = "Paste Max Flow template" })
+
+vim.keymap.set("n", "<leader>tm", function()
+  paste_template("ModNum.cpp")
+end, { desc = "Paste Mod Num template" })
