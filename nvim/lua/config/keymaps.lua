@@ -31,10 +31,34 @@ vim.keymap.set("n", "<leader>ts", function()
   paste_template("SegmentTree.cpp")
 end, { desc = "Paste Segment Tree template" })
 
+vim.keymap.set("n", "<leader>tm", function()
+  paste_template("ModNum.cpp")
+end, { desc = "Paste Mod Num template" })
+
 vim.keymap.set("n", "<leader>tM", function()
   paste_template("MaxFlow.cpp")
 end, { desc = "Paste Max Flow template" })
 
-vim.keymap.set("n", "<leader>tm", function()
-  paste_template("ModNum.cpp")
-end, { desc = "Paste Mod Num template" })
+vim.keymap.set("n", "<leader>tMM", function()
+  paste_template("Matrix.cpp")
+end, { desc = "Paste Matrix template" })
+
+vim.keymap.set("n", "<leader>tH", function()
+  paste_template("Hungarian.cpp")
+end, { desc = "Paste Hungarian Weighted Matching template" })
+
+vim.keymap.set("n", "<leader>tS", function()
+  paste_template("SCC.cpp")
+end, { desc = "Paste Tarjan SCC template" })
+
+vim.keymap.set("n", "<leader>tB", function()
+  paste_template("MCBM.cpp")
+end, { desc = "Paste MCBM template" })
+
+vim.keymap.set("n", "<leader>tI", function()
+  paste_template("IndependentSet.cpp")
+end, { desc = "Paste IndependentSet template" })
+
+vim.keymap.set("n", "<leader>tC", function()
+  paste_template("MaxClique.cpp")
+end, { desc = "Paste MaxClique template" })

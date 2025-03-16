@@ -46,7 +46,7 @@ class MaxFlow {
     return mf;
   }
 
-  std::vector<std::vector<int>> getMinCut(int s) {
+  std::vector<std::vector<int>> minCut(int s) {
     std::vector<bool> visited(V, false);
     std::queue<int> q;
     q.push(s);
