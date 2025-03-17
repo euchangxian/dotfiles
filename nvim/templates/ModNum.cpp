@@ -1,11 +1,13 @@
-#include <cstddef>
-#include <cstdlib>
 #include <iostream>
 #include <istream>
 #include <type_traits>
 
 template <typename T = int, int MOD = 1'000'000'007>
 class ModNum {
+  template <typename U = T>
+  using safe_multiply_t =
+      std::conditional_t<std::is_same_v<U, int>, long long, U>;
+
  public:
   ModNum() : x(0) {}
 
@@ -22,17 +24,17 @@ class ModNum {
     }
   }
 
-  T get() const { return x; }
-  operator int() const { return static_cast<int>(x); }
-  operator long long() const { return static_cast<long long>(x); }
+  constexpr T get() const noexcept { return x; }
+  constexpr operator int() const noexcept { return static_cast<int>(x); }
+  constexpr operator long long() const noexcept {
+    return static_cast<long long>(x);
+  }
 
   // ModNum + ModNum
   ModNum<T, MOD> operator+(const ModNum<T, MOD>& other) const {
-    if constexpr (std::is_same_v<T, int>) {
-      return ModNum<T, MOD>(
-          static_cast<T>((static_cast<long long>(x) + other.x) % MOD));
-    }
-    return ModNum<T, MOD>(static_cast<T>((x + other.x) % MOD));
+    ModNum<T, MOD> result(*this);
+    result += other;
+    return result;
   }
 
   // ModNum + arithmetic type
@@ -46,107 +48,84 @@ class ModNum {
   }
 
   ModNum<T, MOD>& operator+=(const ModNum& other) {
-    if constexpr (std::is_same_v<T, int>) {
-      x = static_cast<T>((static_cast<long long>(x) + other.x) % MOD);
-    } else {
-      x = static_cast<T>((x + other.x) % MOD);
+    x += other.x;
+    if (x >= MOD) {
+      x -= MOD;
     }
     return *this;
   }
 
   template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
   ModNum<T, MOD>& operator+=(U other) {
-    if constexpr (std::is_same_v<T, int>) {
-      x = static_cast<T>((static_cast<long long>(x) + other) % MOD);
-    } else {
-      x = static_cast<T>((x + other) % MOD);
-    }
-    return *this;
+    ModNum<T, MOD> temp(other);
+    return *this += temp;
   }
 
   // WARNING: shifts the number into the positive range. Not remainder.
   ModNum<T, MOD> operator-(const ModNum<T, MOD>& other) const {
-    if constexpr (std::is_same_v<T, int>) {
-      return ModNum<T, MOD>(
-          static_cast<T>((static_cast<long long>(x) - other.x + MOD) % MOD));
-    }
-    return ModNum<T, MOD>(static_cast<T>((x - other.x + MOD) % MOD));
+    ModNum<T, MOD> result(*this);
+    result -= other;
+    return result;
   }
 
   template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
   ModNum<T, MOD> operator-(U other) const {
-    if constexpr (std::is_same_v<T, int>) {
-      return ModNum<T, MOD>(
-          static_cast<T>((static_cast<long long>(x) - other + MOD) % MOD));
-    }
-    return ModNum<T, MOD>(static_cast<T>((x - other + MOD) % MOD));
+    ModNum<T, MOD> temp(other);
+    return *this -= temp;
   }
 
   ModNum<T, MOD>& operator-=(const ModNum<T, MOD>& other) {
-    if constexpr (std::is_same_v<T, int>) {
-      x = static_cast<T>((static_cast<long long>(x) - other.x + MOD) % MOD);
-    } else {
-      x = static_cast<T>((x - other.x + MOD) % MOD);
+    if (x < other.x) {
+      x += MOD;
     }
+    x -= other.x;
     return *this;
   }
 
   template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
   ModNum<T, MOD>& operator-=(U other) {
-    if constexpr (std::is_same_v<T, int>) {
-      x = static_cast<T>((static_cast<long long>(x) - other + MOD) % MOD);
-    } else {
-      x = static_cast<T>((x - other + MOD) % MOD);
-    }
-    return *this;
+    ModNum<T, MOD> temp(other);
+    return *this -= temp;
   }
 
   ModNum<T, MOD> operator*(const ModNum<T, MOD>& other) const {
-    if constexpr (std::is_same_v<T, int>) {
-      return ModNum<T, MOD>(
-          static_cast<T>((static_cast<long long>(x) * other.x) % MOD));
-    }
-    return ModNum<T, MOD>(static_cast<T>((x * other.x) % MOD));
+    ModNum<T, MOD> result(*this);
+    result *= other;
+    return result;
   }
 
   template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
   ModNum<T, MOD> operator*(U other) const {
-    if constexpr (std::is_same_v<T, int>) {
-      return ModNum<T, MOD>(
-          static_cast<T>((static_cast<long long>(x) * other) % MOD));
-    }
-    return ModNum<T, MOD>(static_cast<T>((x * other) % MOD));
+    ModNum<T, MOD> result(*this);
+    result *= other;
+    return result;
   }
 
   ModNum<T, MOD>& operator*=(const ModNum<T, MOD>& other) {
-    if constexpr (std::is_same_v<T, int>) {
-      x = static_cast<T>((static_cast<long long>(x) * other.x) % MOD);
-    } else {
-      x = static_cast<T>((x * other.x) % MOD);
-    }
+    x = static_cast<T>((static_cast<safe_multiply_t<T>>(x) * other.x) % MOD);
     return *this;
   }
 
   template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
   ModNum<T, MOD>& operator*=(U other) {
-    if constexpr (std::is_same_v<T, int>) {
-      x = static_cast<T>((static_cast<long long>(x) * other) % MOD);
-    } else {
-      x = static_cast<T>((x * other) % MOD);
-    }
-    return *this;
+    ModNum<T, MOD> temp(other);
+    return *this *= temp;
   }
 
   // Division (using Fermat's little theorem for modular inverse)
-  ModNum<T, MOD> inverse() const { return pow(MOD - 2); }
+  ModNum<T, MOD> inverse() const { return modPow(MOD - 2); }
 
   ModNum<T, MOD> operator/(const ModNum<T, MOD>& other) const {
-    return *this * other.inverse();
+    ModNum<T, MOD> result(*this);
+    result /= other;
+    return result;
   }
 
   template <typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
   ModNum<T, MOD> operator/(U other) const {
-    return *this / ModNum<T, MOD>(other);
+    ModNum<T, MOD> result(*this);
+    result /= other;
+    return result;
   }
 
   ModNum<T, MOD>& operator/=(const ModNum<T, MOD>& other) {
@@ -159,9 +138,9 @@ class ModNum {
   }
 
   // Power (using binary exponentiation)
-  ModNum<T, MOD> pow(T exponent) const {
+  ModNum<T, MOD> modPow(T exponent) const {
     ModNum<T, MOD> result(1);
-    ModNum<T, MOD> base(x);
+    ModNum<T, MOD> base(*this);
 
     while (exponent > 0) {
       if (exponent & 1) {
