@@ -59,3 +59,11 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
 vim.keymap.set("n", "gd", "<cmd>Lspsaga goto_definition<CR>")
 vim.keymap.set("n", "gR", "<cmd>Lspsaga peek_definition<CR>")
 vim.keymap.set("n", "<leader>ca", "<cmd>Lspsaga code_action<CR>")
+
+-- Map gl to show diagnostics in a floating window
+vim.keymap.set(
+  "n",
+  "gl",
+  "<cmd>lua vim.diagnostic.open_float()<CR>",
+  { noremap = true, silent = true, desc = "Show diagnostics in floating window" }
+)
