@@ -21,6 +21,7 @@
 #include <ranges>
 #include <set>
 #include <span>
+#include <sstream>
 #include <stack>
 #include <string>
 #include <string_view>

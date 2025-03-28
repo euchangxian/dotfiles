@@ -9,25 +9,6 @@ class IndependentSet {
   IndependentSet(std::vector<i64>& adjMat)
       : computed(false), numIS(0), maxIS(0), adjMat(std::move(adjMat)) {}
 
-  IndependentSet(std::vector<std::vector<int>>& adj) {
-    int n = adj.size();
-    std::vector<i64> compacted(n);
-    for (int u = 0; u < n; ++u) {
-      compacted[u] = 1LL << u;
-    }
-
-    for (int u = 0; u < n; ++u) {
-      for (int v = u + 1; v < n; ++v) {
-        if (adj[u][v]) {
-          compacted[u] |= 1LL << v;
-          compacted[v] |= 1LL << u;
-        }
-      }
-    }
-
-    *this = IndependentSet(compacted);
-  }
-
   std::pair<int, int> mis() {
     if (computed) {
       return {numIS, maxIS};

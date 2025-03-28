@@ -1,102 +1,142 @@
+#include <limits>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 /**
- * Hungarian Algorithm for Minimum Cost Bipartite Matching
- * Description: Matches each node on the left with a node on the right
- * such that the sum of edge weights is minimized.
+ * Hungarian Algorithm for Minimum Cost Bipartite Matching with configurable
+ * options
  *
- * @param costMatrix Cost matrix where costMatrix[i][j] = cost for matching left
- * node i with right node j
- * @return Pair of (minimum cost, matching array) where matching[i] is the right
- * node matched to left node i
+ * Template parameters:
+ * - ReturnMatching: Controls whether to return just cost or {cost, matching}
+ * - ZeroIndexed: Whether input/output uses 0-indexing or 1-indexing
+ * - T: Numeric type for costs and indices
+ *
+ * @param costMatrix Cost matrix where costMatrix[i][j] = cost for matching node
+ * i with node j
+ * @return Minimum cost or {min_cost, matching vector} based on ReturnMatching
  *
  * Time Complexity: O(N^2*M) where N is number of left nodes, M is number of
- * right nodes
+ * right nodes Note: #left_nodes must be <= #right_nodes
  */
-std::pair<int, std::vector<int>> hungarian(
-    const std::vector<std::vector<int>>& costMatrix) {
-  if (costMatrix.empty()) {
-    return {0, {}};
+template <bool ReturnMatching = false,
+          bool ZeroIndexed = true,
+          typename T = long long>
+typename std::conditional<ReturnMatching, std::pair<T, std::vector<T>>, T>::type
+Hungarian(const std::vector<std::vector<T>>& costMatrix) {
+  constexpr T INF = std::numeric_limits<T>::max();
+
+  // Adjust for indexing
+  const T rowOffset = ZeroIndexed ? 1 : 0;
+  const T colOffset = ZeroIndexed ? 1 : 0;
+
+  // Determine sizes based on indexing
+  const T n = ZeroIndexed ? costMatrix.size()
+                          : costMatrix.size() - 1;  // Number of left nodes
+  const T m = ZeroIndexed ? costMatrix[0].size()
+                          : costMatrix[0].size() - 1;  // Number of right nodes
+
+  // Create internal 1-indexed array for algorithm processing
+  std::vector<std::vector<T>> a;
+  if constexpr (ZeroIndexed) {
+    // Convert from 0-indexed to 1-indexed for internal algorithm
+    a.resize(n + 1, std::vector<T>(m + 1));
+    for (T i = 0; i < n; ++i) {
+      for (T j = 0; j < m; ++j) {
+        a[i + 1][j + 1] = costMatrix[i][j];
+      }
+    }
+  } else {
+    // Already 1-indexed, use as is
+    a = costMatrix;
   }
 
-  int leftSize = costMatrix.size() + 1;
-  int rightSize = costMatrix[0].size() + 1;
-
   // Potential values for dual linear program
-  std::vector<int> leftPot(leftSize);
-  std::vector<int> rightPot(rightSize);
-
-  // Matching: rightMatch[j] = i means right node j is matched to left node i
-  std::vector<int> rightMatch(rightSize);
-
-  // Final result: matching for each left node
-  std::vector<int> result(leftSize - 1, -1);
+  std::vector<T> u(n + 1);  // Left side potentials
+  std::vector<T> v(m + 1);  // Right side potentials
+  std::vector<T> p(m + 1);  // Current matching: p[j] = i means right node j is
+                            // matched to left node i
 
   // For each left node
-  for (int left = 1; left < leftSize; left++) {
-    rightMatch[0] = left;  // Set dummy node
+  for (T i = 1; i <= n; ++i) {
+    p[0] = i;  // Set current left node to process
+    T j0 = 0;  // Start with dummy right node
 
-    int j0 = 0;
-    std::vector<int> dist(rightSize, INT_MAX);
-    std::vector<int> prev(rightSize, -1);
-    std::vector<bool> visited(rightSize + 1, false);
+    std::vector<T> minv(m + 1, INF);  // Minimum distance to each right node
+    std::vector<T> way(m + 1);        // Path tracking for augmenting path
+    std::vector<bool> used(m + 1, false);  // Visited nodes in Dijkstra
 
-    // Find shortest augmenting path with Dijkstra's algorithm
+    // Dijkstra algorithm to find an augmenting path
     do {
-      visited[j0] = true;
-      int i0 = rightMatch[j0];
-      int j1 = 0;
-      int delta = INT_MAX;
+      used[j0] = true;
+      T i0 = p[j0];   // Current left node
+      T delta = INF;  // Minimum distance
+      T j1 = 0;       // Next right node to visit
 
       // Update distances for all unvisited right nodes
-      for (int right = 1; right < rightSize; right++) {
-        if (!visited[right]) {
-          // Reduced cost (with respect to potentials)
-          int cost =
-              costMatrix[i0 - 1][right - 1] - leftPot[i0] - rightPot[right];
+      for (T j = 1; j <= m; ++j) {
+        if (!used[j]) {
+          // Calculate reduced cost
+          T cur = a[i0][j] - u[i0] - v[j];
 
-          if (cost < dist[right]) {
-            dist[right] = cost;
-            prev[right] = j0;
+          // Update minimum distance and path
+          if (cur < minv[j]) {
+            minv[j] = cur;
+            way[j] = j0;
           }
 
-          if (dist[right] < delta) {
-            delta = dist[right];
-            j1 = right;
+          // Track minimum overall distance
+          if (minv[j] < delta) {
+            delta = minv[j];
+            j1 = j;
           }
         }
       }
 
       // Update potentials
-      for (int j = 0; j < rightSize; j++) {
-        if (visited[j]) {
-          leftPot[rightMatch[j]] += delta;
-          rightPot[j] -= delta;
+      for (T j = 0; j <= m; ++j) {
+        if (used[j]) {
+          u[p[j]] += delta;
+          v[j] -= delta;
         } else {
-          dist[j] -= delta;
+          minv[j] -= delta;
         }
       }
 
-      j0 = j1;
-
-      // Continue until we find an unmatched right node
-    } while (rightMatch[j0] != 0);
+      j0 = j1;  // Move to the next right node
+    } while (p[j0] != 0);  // Continue until we find an unmatched right node
 
     // Update matching along the augmenting path
-    while (j0 != 0) {
-      int j1 = prev[j0];
-      rightMatch[j0] = rightMatch[j1];
+    do {
+      T j1 = way[j0];
+      p[j0] = p[j1];
       j0 = j1;
-    }
+    } while (j0 != 0);
   }
 
-  // Extract final matching
-  for (int right = 1; right < rightSize; right++) {
-    if (rightMatch[right] != 0) {
-      result[rightMatch[right] - 1] = right - 1;
-    }
+  // If we're not returning matching, just return the cost
+  if constexpr (!ReturnMatching) {
+    return -v[0];  // Return just min cost
   }
 
-  return {-rightPot[0], result};  // Return minimum cost and matching
+  // Extract matching based on indexing preference
+  std::vector<T> matching;
+  if constexpr (ZeroIndexed) {
+    // Return 0-indexed matching
+    matching.resize(n, -1);
+    for (T j = 1; j <= m; ++j) {
+      if (p[j] != 0) {
+        matching[p[j] - 1] = j - 1;
+      }
+    }
+  } else {
+    // Return 1-indexed matching
+    matching.resize(n + 1);
+    for (T j = 1; j <= m; ++j) {
+      if (p[j] != 0) {
+        matching[p[j]] = j;
+      }
+    }
+  }
+  return {-v[0], matching};  // Return {min_cost, matching}
 }
