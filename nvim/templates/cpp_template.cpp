@@ -9,6 +9,7 @@
 #include <iostream>
 #include <istream>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <numeric>
 #include <queue>

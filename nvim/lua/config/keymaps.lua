@@ -47,9 +47,13 @@ vim.keymap.set("n", "<leader>tH", function()
   paste_template("Hungarian.cpp")
 end, { desc = "Paste Hungarian Weighted Matching template" })
 
-vim.keymap.set("n", "<leader>tS", function()
+vim.keymap.set("n", "<leader>ts", function()
   paste_template("SCC.cpp")
 end, { desc = "Paste Tarjan SCC template" })
+
+vim.keymap.set("n", "<leader>tS", function()
+  paste_template("SuffixArray.cpp")
+end, { desc = "Paste Suffix Array template" })
 
 vim.keymap.set("n", "<leader>tB", function()
   paste_template("MCBM.cpp")
