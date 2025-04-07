@@ -65,6 +65,7 @@ create_symlink "git/.gitignore_global" "$HOME"
 
 # .config directory dotfiles
 echo -e "\n${GREEN}Creating symlinks for .config directory dotfiles...${NC}"
+create_symlink "wezterm" "$XDG_CONFIG_HOME"
 create_symlink "nvim" "$XDG_CONFIG_HOME"
 create_symlink "bat" "$XDG_CONFIG_HOME"
 
