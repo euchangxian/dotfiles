@@ -19,7 +19,7 @@
   "theme": {
     "mode": "system",
     "light": "One Light",
-    "dark": "Atelier Sulphurpool Dark"
+    "dark": "Tokyo Night Storm"
   },
   "terminal": {
     "font_family": "MesloLGS NF",
@@ -33,7 +33,7 @@
     "git_status": true,
     "file_icons": true
   },
-  "autosave": "on_focus_change",
+  "autosave": "off",
   "languages": {
     "C++": {
       "format_on_save": "on",
