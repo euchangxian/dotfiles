@@ -20,8 +20,9 @@ end
 local host_os = get_os()
 
 -- Font Configuration
-config.font = wezterm.font({ family = "MesloLGS NF", weight = "Regular" })
+config.font = wezterm.font({ family = "JetBrainsMono Nerd Font", weight = "Regular" })
 config.font_size = 13.0
+config.default_cursor_style = "BlinkingBar"
 
 -- Color Configuration
 config.colors = require("cyberdream")

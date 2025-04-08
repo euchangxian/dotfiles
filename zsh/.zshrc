@@ -1,10 +1,3 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
@@ -13,10 +6,6 @@ plugins=(colored-man-pages)
 # ============================ Init Shell =====================================
 # Oh-My-ZSH
 source $ZSH/oh-my-zsh.sh
-
-# P10k
-source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # ZSH Auto Suggestions
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
@@ -191,6 +180,9 @@ function syncdir() {
 # Add homebrew binaries to PATH
 export PATH=/opt/homebrew/bin:$PATH
 
+# Add Wezterm CLI to PATH
+export PATH=$PATH:/Applications/WezTerm.app/Contents/MacOS
+
 # Set GOROOT
 export GOROOT=/opt/homebrew/opt/go/libexec
 
@@ -268,9 +260,6 @@ fi
 # <<< conda initialize <<<
 
 # ============================== Alias Definitions ============================
-# Alias wezterm executable
-alias wezterm="/Applications/WezTerm.app/Contents/MacOS/wezterm"
-
 # Use neo-vim by default
 alias vim='nvim'
 
@@ -300,3 +289,6 @@ alias gfixup='git add . && git commit -m 'fixup' && git rebase -i HEAD~2'
 
 # Forgot what was this for...
 . "$HOME/.local/bin/env"
+
+# https://starship.rs/
+eval "$(starship init zsh)"
