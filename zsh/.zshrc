@@ -21,8 +21,6 @@ source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source <(fzf --zsh)
 source ~/.config/fzf-git.sh/fzf-git.sh
 
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-
 # ============================ Function Definitions ===========================
 # Make and Change Directory
 function mkcdir () {
@@ -119,7 +117,7 @@ function clangpp() {
 
 function debugcpp() {
     if [[ $# -eq 0 ]]; then
-        echo "Usage: runcpp <FILE_NAME.cpp>"
+        echo "Usage: debugcpp <FILE_NAME.cpp>"
         return 1
     fi
 
@@ -217,8 +215,8 @@ export LDFLAGS="-L/usr/local/opt/openssl/lib"
 export CPPFLAGS="-I/usr/local/opt/openssl/include"
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="/Users/euchangxian/.sdkman"
-[[ -s "/Users/euchangxian/.sdkman/bin/sdkman-init.sh" ]] && source "/Users/euchangxian/.sdkman/bin/sdkman-init.sh"
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 # GitLab GPG Key compatibility with Powerlevel10k
 export GPG_TTY=$(tty)
@@ -242,20 +240,20 @@ export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always {} | head -200'"
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/Users/euchangxian/miniforge3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+__conda_setup="$("$HOME/miniforge3/bin/conda" 'shell.zsh' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
   eval "$__conda_setup"
 else
-  if [ -f "/Users/euchangxian/miniforge3/etc/profile.d/conda.sh" ]; then
-    . "/Users/euchangxian/miniforge3/etc/profile.d/conda.sh"
+  if [ -f "$HOME/miniforge3/etc/profile.d/conda.sh" ]; then
+    . "$HOME/miniforge3/etc/profile.d/conda.sh"
   else
-    export PATH="/Users/euchangxian/miniforge3/bin:$PATH"
+    export PATH="$HOME/miniforge3/bin:$PATH"
   fi
 fi
 unset __conda_setup
 
-if [ -f "/Users/euchangxian/miniforge3/etc/profile.d/mamba.sh" ]; then
-  . "/Users/euchangxian/miniforge3/etc/profile.d/mamba.sh"
+if [ -f "$HOME/miniforge3/etc/profile.d/mamba.sh" ]; then
+  . "$HOME/miniforge3/etc/profile.d/mamba.sh"
 fi
 # <<< conda initialize <<<
 
@@ -272,7 +270,7 @@ alias gpp='g++-14 -std=c++23 -O3'
 # Compile C++ files with clang++
 alias cpp='clang++ -std=c++20 -stdlib=libc++'
 
-# CS3210
+# CS3211
 alias cs3211pp='clang++ -std=c++23 -stdlib=libc++ -fsanitize=thread -fexperimental-library -O3'
 
 # Use eza instead of ls

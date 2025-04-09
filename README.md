@@ -19,4 +19,5 @@ bash setup.sh
 - Any new symlinks to be created must be added into `setup.sh`; script is
   hard-coded. No plans to update yet, since it is unlikely that I will have many
   new config files to manage.
-- **Not** tested on a clean machine before.
+- **Not** tested on a clean machine before. Note that paths, alias, etc may be
+  hard-coded.
