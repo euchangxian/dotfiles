@@ -56,7 +56,7 @@ create_symlink "grc" "$HOME"
 
 # .config directory dotfiles
 echo -e "\n${BLUE}${BOLD}========== SETTING UP .CONFIG DIRECTORY DOTFILES ==========${NC}"
-create_symlink "starship.toml" "$XDG_CONFIG_HOME"
+create_symlink "starship/starship.toml" "$XDG_CONFIG_HOME"
 create_symlink "wezterm" "$XDG_CONFIG_HOME"
 create_symlink "nvim" "$XDG_CONFIG_HOME"
 create_symlink "fzf-git.sh" "$XDG_CONFIG_HOME"
