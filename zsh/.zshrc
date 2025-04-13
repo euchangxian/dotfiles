@@ -274,7 +274,8 @@ alias cpp='clang++ -std=c++20 -stdlib=libc++'
 alias cs3211pp='clang++ -std=c++23 -stdlib=libc++ -fsanitize=thread -fexperimental-library -O3'
 
 # Use eza instead of ls
-alias ls='eza --grid --color=always --icons=always --long --git --no-filesize --no-time --no-user --no-permissions'
+# alias ls='eza --grid --color=always --icons=always --long --git --no-filesize --no-time --no-user --no-permissions'
+alias ls='eza --grid --color=always --icons=always'
 
 # cd to Git Repository Project root
 alias cdr='cd $(git rev-parse --show-toplevel)'
