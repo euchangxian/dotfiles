@@ -101,6 +101,7 @@ create_symlink "bat" "$XDG_CONFIG_HOME"
 create_symlink "rclone" "$XDG_CONFIG_HOME"
 create_symlink "pokemon-colorscripts" "$XDG_CONFIG_HOME"
 create_symlink "shell-color-scripts" "$XDG_CONFIG_HOME"
+create_symlink "lazygit" "$XDG_CONFIG_HOME"
 
 # Additional configurations
 echo -e "\n${BLUE}${BOLD}========== SETTING UP ADDITIONAL CONFIGURATIONS ==========${NC}"

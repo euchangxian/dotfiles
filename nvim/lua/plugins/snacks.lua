@@ -18,6 +18,7 @@ return {
     scroll = { enabled = true },
     statuscolumn = { enabled = true },
     words = { enabled = true },
+    lazygit = { enabled = true },
     styles = {
       notification = {
         quickfile = { enabled = true },

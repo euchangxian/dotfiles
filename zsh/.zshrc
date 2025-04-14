@@ -175,6 +175,9 @@ function syncdir() {
 # =============================================================================
 #                             PATH/Bin Variables/Other Exports
 # =============================================================================
+# Set default config directory
+export XDG_CONFIG_HOME="$HOME/.config"
+
 # Add homebrew binaries to PATH
 export PATH=/opt/homebrew/bin:$PATH
 
@@ -279,9 +282,6 @@ alias ls='eza --grid --color=always --icons=always'
 
 # cd to Git Repository Project root
 alias cdr='cd $(git rev-parse --show-toplevel)'
-
-# Use ripgrep case-insensitively by default
-alias rg='rg -i'
 
 alias gfixup='git add . && git commit -m 'fixup' && git rebase -i HEAD~2'
 # =============================================================================
