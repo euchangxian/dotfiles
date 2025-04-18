@@ -190,6 +190,9 @@ export GOROOT=/opt/homebrew/opt/go/libexec
 # Add GOBIN to PATH
 export PATH=$PATH:$HOME/go/bin
 
+# Add Cargo Bin to path.
+export PATH=$PATH:$HOME/.cargo/bin
+
 # Use GCC
 export PATH=/usr/local/bin:$PATH
 

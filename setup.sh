@@ -9,6 +9,14 @@ YELLOW='\033[0;33m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
+# Get script directory (absolute path to dotfiles)
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+echo -e "${GREEN}Setting up dotfiles from: $DOTFILES_DIR${NC}"
+
+# Create XDG config directory if it doesn't exist
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+mkdir -p "$XDG_CONFIG_HOME"
+
 # Function to check if a command exists
 command_exists() {
   command -v "$1" >/dev/null 2>&1
@@ -75,14 +83,6 @@ if command_exists brew; then
     brew bundle install --file="$DOTFILES_DIR/homebrew/Brewfile"
   fi
 fi
-
-# Get script directory (absolute path to dotfiles)
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-echo -e "${GREEN}Setting up dotfiles from: $DOTFILES_DIR${NC}"
-
-# Create XDG config directory if it doesn't exist
-XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-mkdir -p "$XDG_CONFIG_HOME"
 
 # Home directory dotfiles
 echo -e "\n${BLUE}${BOLD}========== SETTING UP HOME DIRECTORY DOTFILES ==========${NC}"
