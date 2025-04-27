@@ -18,6 +18,7 @@
 #include <numeric>
 #include <ostream>
 #include <queue>
+#include <ranges>
 #include <set>
 #include <sstream>
 #include <stack>
