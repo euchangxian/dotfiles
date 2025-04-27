@@ -15,6 +15,10 @@ vim.keymap.set("n", "<leader>td", function()
   paste_template("Directions.cpp")
 end, { desc = "Paste Directions template" })
 
+vim.keymap.set("n", "<leader>tD", function()
+  paste_template("Debug.cpp")
+end, { desc = "Paste Debugging template" })
+
 vim.keymap.set("n", "<leader>tu", function()
   paste_template("UnionFind.cpp")
 end, { desc = "Paste Union Find template" })

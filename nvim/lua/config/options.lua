@@ -53,6 +53,8 @@ vim.g.trouble_lualine = true
 -- Turn off LSP log
 vim.lsp.set_log_level("OFF")
 
+vim.env.TERM = "xterm-256color" -- Set terminal type for better compatibility
+
 local opt = vim.opt
 
 opt.autowrite = true -- Enable auto write

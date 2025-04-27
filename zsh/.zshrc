@@ -8,6 +8,7 @@ plugins=(colored-man-pages)
 source $ZSH/oh-my-zsh.sh
 
 # ZSH Auto Suggestions
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=244,bold"
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # Bind shift-tab to accept Auto Suggestions
@@ -87,8 +88,7 @@ function runcpp() {
     local executable="${cpp_file%.cpp}"
 
     # Compile C++ file
-    if g++-14 -std=c++23 -O3 -o "$executable" "$cpp_file"; then
-        ./"$executable"
+    if clang++ -std=c++23 -stdlib=libc++ -fexperimental-library -O3 -o "$executable" "$cpp_file"; then ./"$executable"
         rm "$executable"
     else
         echo "Compilation failed"
@@ -125,7 +125,7 @@ function debugcpp() {
     local executable="${cpp_file%.cpp}"
 
     # Compile C++ file
-    if g++-14 -std=c++23 -g -o "$executable" "$cpp_file"; then
+    if clang++ -std=c++23 -stdlib=libc++ -fexperimental-library -O3 -DDEBUG -o "$executable" "$cpp_file"; then
         lldb ./"$executable"
         rm "$executable" 
     else
