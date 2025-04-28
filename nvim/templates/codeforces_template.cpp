@@ -3,10 +3,8 @@
 #include <bitset>
 #include <climits>
 #include <cmath>
-#include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <cstdlib>
 #include <deque>
 #include <functional>
 #include <iomanip>
@@ -14,6 +12,7 @@
 #include <iostream>
 #include <istream>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <numeric>
 #include <ostream>
