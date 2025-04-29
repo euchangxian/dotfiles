@@ -51,6 +51,10 @@ vim.keymap.set("n", "<leader>tH", function()
   paste_template("Hungarian.cpp")
 end, { desc = "Paste Hungarian Weighted Matching template" })
 
+vim.keymap.set("n", "<leader>tr", function()
+  paste_template("RadixSort.cpp")
+end, { desc = "Paste Radix/Counting Sort template" })
+
 vim.keymap.set("n", "<leader>ts", function()
   paste_template("SCC.cpp")
 end, { desc = "Paste Tarjan SCC template" })

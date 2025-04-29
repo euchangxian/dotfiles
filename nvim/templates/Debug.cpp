@@ -100,5 +100,5 @@ template <typename T, typename... Rest>
 void debugPrint(const char* names, T&& val, Rest&&... rest) {
   const char* comma = strchr(names, ',');
   std::clog.write(names, comma - names) << ": " << val << '\n';
-  debugPrint(comma + 1, std::forward<Rest>(rest)...);
+  debugPrint(comma + 2, std::forward<Rest>(rest)...);
 }
