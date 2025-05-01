@@ -29,6 +29,10 @@
 #include <utility>
 #include <vector>
 
+#ifdef DEBUG
+#include "../Debug.cpp"
+#endif  // DEBUG
+
 using i64 = long long;
 constexpr int MOD = 1'000'000'007;
 
