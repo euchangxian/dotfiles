@@ -7,10 +7,10 @@ return {
     ---@field sections snacks.dashboard.Section
     ---@field formats table<string, snacks.dashboard.Text|fun(item:snacks.dashboard.Item, ctx:snacks.dashboard.Format.ctx):snacks.dashboard.Text>
     dashboard = {
-      width = 50,
+      width = 40,
       row = nil, -- dashboard position. nil for center
       col = nil, -- dashboard position. nil for center
-      pane_gap = 30, -- empty columns between vertical panes
+      pane_gap = 20, -- empty columns between vertical panes
       autokeys = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", -- autokey sequence
       preset = {
         -- Defaults to a picker that supports `fzf-lua`, `telescope.nvim` and `mini.pick`
@@ -37,12 +37,13 @@ return {
         --   { icon = " ", key = "q", desc = "Quit", action = ":qa" },
         -- },
         header = [[
-.------..------..------..------..------..------..------..------..------.
-|C.--. ||H.--. ||A.--. ||N.--. ||G.--. ||X.--. ||I.--. ||A.--. ||N.--. |
-| :/\: || :/\: || (\/) || :(): || :/\: || :/\: || (\/) || (\/) || :(): |
-| :\/: || (__) || :\/: || ()() || :\/: || (__) || :\/: || :\/: || ()() |
-| '--'C|| '--'H|| '--'A|| '--'N|| '--'G|| '--'X|| '--'I|| '--'A|| '--'N|
-`------'`------'`------'`------'`------'`------'`------'`------'`------'
+       _                            _             
+   ___| |__   __ _ _ __   __ ___  _(_) __ _ _ __  
+  / __| '_ \ / _` | '_ \ / _` \ \/ / |/ _` | '_ \ 
+ | (__| | | | (_| | | | | (_| |>  <| | (_| | | | |
+  \___|_| |_|\__,_|_| |_|\__, /_/\_\_|\__,_|_| |_|
+                         |___/                    
+
 ]],
       },
       -- formats = {
@@ -74,8 +75,8 @@ return {
         {
           pane = 2,
           section = "terminal",
-          cmd = "pokemon-colorscripts --no-title -rn pikachu,charmander,bulbasaur,squirtle",
-          height = 10,
+          cmd = "pokemon-colorscripts --no-title -rn pikachu,charmander,bulbasaur,squirtle,charizard,blastoise,venusaur",
+          height = 20,
           padding = 1,
         },
         { section = "keys", gap = 1, padding = 1 },

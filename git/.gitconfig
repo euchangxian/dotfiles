@@ -15,13 +15,24 @@
   defaultBranch=main
 
 [interactive]
+  # Use delta for interactive operations (like git add -p) with color-only mode
+  # This preserves interactive functionality while adding syntax highlighting
   diffFilter = delta --color-only --features=interactive
 
 [delta]
-  navigate = true # use n and N to move between diff sections
+  # Enable navigation between diff sections using 'n' (next) and 'N' (previous)
+  navigate = true
+
+  # Show diffs in unified format instead of side-by-side columns
   side-by-side = false
+
+  # Apply the "decorations" feature set (defined below)
   features = decorations
+
+  # Make file paths clickable links
   hyperlinks = true
+
+  # Format for hyperlinks - opens files in VS Code at specific line
   hyperlinks-file-link-format = "vscode://file/{path}:{line}"
 
   # delta detects terminal colors automatically; set one of those to disable auto-detection
@@ -29,20 +40,38 @@
   # light = true
 
 [delta "interactive"]
+  # Don't show +/- markers in interactive mode for cleaner display
   keep-plus-minus-markers = false
 
 [delta "decorations"]
+  # Style for commit hash line: blue text with overline
   commit-decoration-style = blue ol
+
+  # Show commit info as-is without additional styling
   commit-style = raw
+
+  # Don't show file names in the diff header
   file-style = omit
+
+  # Style for diff section headers: blue box around them
   hunk-header-decoration-style = blue box
+
+  # Style for filename in hunk headers: red text
   hunk-header-file-style = red
-  hunk-header-line-number-style = "#067a00"
+
+  # What to show in hunk headers: filename, line numbers, and syntax highlighting
   hunk-header-style = file line-number syntax
 
+  # Style for line numbers in hunk headers: green color
+  hunk-header-line-number-style = "#067a00"
+
 [merge]
+  # Show 3-way diff during conflicts: original, yours, theirs
+  # This shows what the original looked like before both changes
   conflictstyle = diff3
 
 [diff]
+  # Highlight moved lines in diffs (lines that were cut from one place and pasted elsewhere)
+  # "default" uses different colors for moved blocks
   colorMoved = default
 

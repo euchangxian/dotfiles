@@ -28,10 +28,13 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
 #ifdef DEBUG
 #include "../Debug.cpp"
 #endif  // DEBUG
+
+#define read(arr, l, r)       \
+  for (int i = l; i < r; ++i) \
+  std::cin >> arr[i]
 
 using i64 = long long;
 constexpr int MOD = 1'000'000'007;

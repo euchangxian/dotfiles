@@ -8,11 +8,10 @@ plugins=(colored-man-pages)
 source $ZSH/oh-my-zsh.sh
 
 # ZSH Auto Suggestions
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=244,bold"
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-# Bind shift-tab to accept Auto Suggestions
-bindkey '^[[Z' autosuggest-accept
+bindkey '^[[Z' autosuggest-accept # Bind shift-tab to accept Auto Suggestions
 
 # ZSH Syntax Highlighting
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
@@ -70,6 +69,25 @@ function _fzf_comprun() {
   esac
 }
 
+# Ripgrep and displays results in delta pager.
+function rgd() {
+  if [[ $# -eq 0 ]]; then
+    echo "Usage: rgd <pattern>"
+    return 1
+  fi
+  rg --json "$1" | delta
+}
+
+# Ripgrep and preview files that matches pattern using FZF. Then, bat can be
+# used to browse the file.
+function rgb() {
+  if [[ $# -eq 0 ]]; then
+    echo "Usage: rgb <pattern>"
+    return 1
+  fi
+  rg -l "$1" | fzf --preview="bat {}" --bind "enter:execute(bat {})"
+}
+
 function jwt() {
     if [ -z "$1" ]; then
         echo "Usage: jwt <token>"
@@ -88,7 +106,7 @@ function runcpp() {
     local executable="${cpp_file%.cpp}"
 
     # Compile C++ file
-    if clang++ -std=c++23 -stdlib=libc++ -fexperimental-library -O3 -o "$executable" "$cpp_file"; then ./"$executable"
+    if clang++ -std=c++23 -stdlib=libc++ -fexperimental-library -O3 -DDEBUG -o "$executable" "$cpp_file"; then ./"$executable"
         rm "$executable"
     else
         echo "Compilation failed"
@@ -173,8 +191,18 @@ function syncdir() {
 }
 
 # =============================================================================
-#                             PATH/Bin Variables/Other Exports
+#                   PATH/Bin Variables/Other Exports
 # =============================================================================
+export LESS_TERMCAP_mb=$'\E[1;31m'     # begin bold
+export LESS_TERMCAP_md=$'\E[1;36m'     # begin blink
+export LESS_TERMCAP_me=$'\E[0m'        # reset bold/blink
+export LESS_TERMCAP_so=$'\E[01;44;33m' # begin reverse video
+export LESS_TERMCAP_se=$'\E[0m'        # reset reverse video
+export LESS_TERMCAP_us=$'\E[1;32m'     # begin underline
+export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
+export LESS='--ignore-case --clear-screen --CLEAR-SCREEN --LONG-PROMPT --RAW-CONTROL-CHARS --tabs=4 --window=4'
+export BAT_PAGER="less $LESS"
+
 # Set default config directory
 export XDG_CONFIG_HOME="$HOME/.config"
 
