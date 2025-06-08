@@ -114,44 +114,6 @@ function runcpp() {
     fi
 }
 
-function clangpp() {
-    if [[ $# -eq 0 ]]; then
-        echo "Usage: clangpp <FILE_NAME.cpp>"
-        return 1
-    fi
-
-    local cpp_file="$1"
-    local executable="${cpp_file%.cpp}"
-
-    # Compile C++ file
-    if clang++ -std=c++23 -stdlib=libc++ -fexperimental-library -O3 -o "$executable" "$cpp_file"; then
-        ./"$executable" 
-        rm "$executable"
-    else
-        echo "Compilation failed"
-        return 1
-    fi
-}
-
-function debugcpp() {
-    if [[ $# -eq 0 ]]; then
-        echo "Usage: debugcpp <FILE_NAME.cpp>"
-        return 1
-    fi
-
-    local cpp_file="$1"
-    local executable="${cpp_file%.cpp}"
-
-    # Compile C++ file
-    if clang++ -std=c++23 -stdlib=libc++ -fexperimental-library -O3 -DDEBUG -o "$executable" "$cpp_file"; then
-        lldb ./"$executable"
-        rm "$executable" 
-    else
-        echo "Compilation failed"
-        return 1
-    fi
-}
-
 function runrs() {
     if [[ $# -eq 0 ]]; then
         echo "Usage: runrs <FILE_NAME.cpp>"
@@ -193,6 +155,8 @@ function syncdir() {
 # =============================================================================
 #                   PATH/Bin Variables/Other Exports
 # =============================================================================
+
+# LESS flags.
 export LESS_TERMCAP_mb=$'\E[1;31m'     # begin bold
 export LESS_TERMCAP_md=$'\E[1;36m'     # begin blink
 export LESS_TERMCAP_me=$'\E[0m'        # reset bold/blink
@@ -207,22 +171,22 @@ export BAT_PAGER="less $LESS"
 export XDG_CONFIG_HOME="$HOME/.config"
 
 # Add homebrew binaries to PATH
-export PATH=/opt/homebrew/bin:$PATH
+export PATH="/opt/homebrew/bin:$PATH"
 
 # Add Wezterm CLI to PATH
-export PATH=$PATH:/Applications/WezTerm.app/Contents/MacOS
+export PATH="$PATH:/Applications/WezTerm.app/Contents/MacOS"
 
 # Set GOROOT
-export GOROOT=/opt/homebrew/opt/go/libexec
+export GOROOT="/opt/homebrew/opt/go/libexec"
 
 # Add GOBIN to PATH
-export PATH=$PATH:$HOME/go/bin
+export PATH="$PATH:$HOME/go/bin"
 
 # Add Cargo Bin to path.
-export PATH=$PATH:$HOME/.cargo/bin
+export PATH="$PATH:$HOME/.cargo/bin"
 
 # Use GCC
-export PATH=/usr/local/bin:$PATH
+export PATH="/usr/local/bin:$PATH"
 
 # Add NVM to PATH
 export NVM_DIR="$HOME/.nvm"
@@ -230,11 +194,11 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 # Add Mason executables to PATH
-export PATH=$PATH:$HOME/.local/share/nvim/mason/bin
+export PATH="$PATH:$HOME/.local/share/nvim/mason/bin"
 
 # Maven
-export M2_HOME=/opt/homebrew/bin/mvn
-export PATH=$JAVA_HOME/bin:$M2_HOME/bin:$PATH
+export M2_HOME="/opt/homebrew/bin/mvn"
+export PATH="$JAVA_HOME/bin:$M2_HOME/bin:$PATH"
 
 # PostgreSQL
 export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
@@ -303,9 +267,6 @@ alias gpp='g++-14 -std=c++23 -O3'
 
 # Compile C++ files with clang++
 alias cpp='clang++ -std=c++20 -stdlib=libc++'
-
-# CS3211
-alias cs3211pp='clang++ -std=c++23 -stdlib=libc++ -fsanitize=thread -fexperimental-library -O3'
 
 # Use eza instead of ls
 # alias ls='eza --grid --color=always --icons=always --long --git --no-filesize --no-time --no-user --no-permissions'
