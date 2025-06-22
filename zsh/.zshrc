@@ -1,7 +1,6 @@
-# Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
-plugins=(colored-man-pages)
+plugins=(gnu-utils colored-man-pages)
 
 # ============================ Init Shell =====================================
 # Oh-My-ZSH
@@ -21,23 +20,43 @@ source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source <(fzf --zsh)
 source ~/.config/fzf-git.sh/fzf-git.sh
 
+# ======================= Helper Variables/Functions ===========================
+RED="\e[31m"
+MAGENTA="\e[35m"
+YELLOW="\e[33m"
+GREEN="\e[32m"
+NC="\e[0m"
+
+function info() {
+  echo -e "[${GREEN}INFO${NC}] $@"
+}
+function debug() {
+  echo -e "[${MAGENTA}DEBUG${NC}] $@"
+}
+function warn() {
+  echo -e "[${YELLOW}WARN${NC}] $@"
+}
+function error() {
+  echo -e "[${RED}ERROR${NC}] $@" >&2
+}
+
 # ============================ Function Definitions ===========================
 # Make and Change Directory
 function mkcdir () {
   if [ "$#" -ne 1 ]; then
-    echo "usage: mkcdir DIRECTORY_NAME"
+    error "usage: mkcdir <DIRECTORY_NAME>"
     return 1
   fi
-  mkdir $1 && cd $1
+  mkdir -p "$1" && cd "$1"
 }
 
 # Copy file content to clipboard
 function clip () {
   if [ "$#" -ne 1 ]; then
-    echo "usage: clip FILE_NAME"
+    error "usage: clip <FILE_NAME>"
     return 1
   fi
-  cat $1 | pbcopy
+  cat "$1" | pbcopy
 }
 
 # FZF (Fuzzy Finder) Functions
@@ -58,7 +77,7 @@ show_file_or_dir_preview="if [ -d {} ]; then eza --tree --color=always {} | head
 # - The first argument to the function is the name of the command
 # - The rest of the arguments should be passed to fzf
 function _fzf_comprun() {
-  local command=$1
+  local command="$1"
   shift
 
   case "$command" in
@@ -71,8 +90,8 @@ function _fzf_comprun() {
 
 # Ripgrep and displays results in delta pager.
 function rgd() {
-  if [[ $# -eq 0 ]]; then
-    echo "Usage: rgd <pattern>"
+  if [[ "$#" -eq 0 ]]; then
+    error "Usage: rgd <PATTERN>"
     return 1
   fi
   rg --json "$1" | delta
@@ -81,8 +100,8 @@ function rgd() {
 # Ripgrep and preview files that matches pattern using FZF. Then, bat can be
 # used to browse the file.
 function rgb() {
-  if [[ $# -eq 0 ]]; then
-    echo "Usage: rgb <pattern>"
+  if [[ "$#" -eq 0 ]]; then
+    error "Usage: rgb <PATTERN>"
     return 1
   fi
   rg -l "$1" | fzf --preview="bat {}" --bind "enter:execute(bat {})"
@@ -90,15 +109,15 @@ function rgb() {
 
 function jwt() {
     if [ -z "$1" ]; then
-        echo "Usage: jwt <token>"
+        error "Usage: jwt <JWT_TOKEN>"
         return 1
     fi
-    echo "$1" | jq -R 'split(".") | .[0,1] | @base64d | fromjson' 2>/dev/null || echo "Invalid JWT token"
+    echo "$1" | jq -R 'split(".") | .[0,1] | @base64d | fromjson' 2>/dev/null || error "Invalid JWT token"
 }
 
 function runcpp() {
-    if [[ $# -eq 0 ]]; then
-        echo "Usage: runcpp <FILE_NAME.cpp>"
+    if [[ "$#" -eq 0 ]]; then
+        error "Usage: runcpp <FILE_NAME>"
         return 1
     fi
 
@@ -109,26 +128,25 @@ function runcpp() {
     if clang++ -std=c++23 -stdlib=libc++ -fexperimental-library -O3 -DDEBUG -o "$executable" "$cpp_file"; then ./"$executable"
         rm "$executable"
     else
-        echo "Compilation failed"
+        error "Compilation failed"
         return 1
     fi
 }
 
 function runrs() {
-    if [[ $# -eq 0 ]]; then
-        echo "Usage: runrs <FILE_NAME.cpp>"
+    if [[ "$#" -eq 0 ]]; then
+        error "Usage: runrs <FILE_NAME>"
         return 1
     fi
 
     local rust_file="$1"
     local executable="${rust_file%.rs}"
 
-    # Compile Rust file
     if rustc -O -o "$executable" "$rust_file"; then
         ./"$executable"
         rm "$executable"
     else
-        echo "Compilation failed"
+        error "Compilation failed"
         return 1
     fi
 }
@@ -139,16 +157,16 @@ function syncdir() {
     local REMOTE_DIR="$2"   # Remote directory path to sync with
 
     if [[ -z "$LOCAL_DIR" || -z "$REMOTE_DIR" ]]; then
-        echo "Usage: syncdir <local_directory> <remote_directory>"
+        error "Usage: syncdir <LOCAL_DIR> <REMOTE_DIR>"
         return 1
     fi
 
-    echo "Starting to watch $LOCAL_DIR and sync with $REMOTE_DIR on remote host..."
+    info "Starting to watch $LOCAL_DIR and sync with $REMOTE_DIR on remote host..."
 
     # Start fswatch to monitor changes and sync with remote host
     fswatch -o "$LOCAL_DIR" | while read change; do
         rsync -avz --exclude='.git/' "$LOCAL_DIR/" "$REMOTE_DIR"
-        echo "Synced changes from $LOCAL_DIR to $REMOTE_DIR"
+        info "Synced changes from $LOCAL_DIR to $REMOTE_DIR"
     done
 }
 
@@ -157,13 +175,13 @@ function syncdir() {
 # =============================================================================
 
 # LESS flags.
-export LESS_TERMCAP_mb=$'\E[1;31m'     # begin bold
-export LESS_TERMCAP_md=$'\E[1;36m'     # begin blink
-export LESS_TERMCAP_me=$'\E[0m'        # reset bold/blink
-export LESS_TERMCAP_so=$'\E[01;44;33m' # begin reverse video
-export LESS_TERMCAP_se=$'\E[0m'        # reset reverse video
-export LESS_TERMCAP_us=$'\E[1;32m'     # begin underline
-export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
+export LESS_TERMCAP_mb=$'\e[1;31m'     # begin bold
+export LESS_TERMCAP_md=$'\e[1;36m'     # begin blink
+export LESS_TERMCAP_me=$'\e[0m'        # reset bold/blink
+export LESS_TERMCAP_so=$'\e[01;44;33m' # begin reverse video
+export LESS_TERMCAP_se=$'\e[0m'        # reset reverse video
+export LESS_TERMCAP_us=$'\e[1;32m'     # begin underline
+export LESS_TERMCAP_ue=$'\e[0m'        # reset underline
 export LESS='--ignore-case --clear-screen --CLEAR-SCREEN --LONG-PROMPT --RAW-CONTROL-CHARS --tabs=4 --window=4'
 export BAT_PAGER="less $LESS"
 
@@ -174,16 +192,16 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export PATH="/opt/homebrew/bin:$PATH"
 
 # Add Wezterm CLI to PATH
-export PATH="$PATH:/Applications/WezTerm.app/Contents/MacOS"
+export PATH="/Applications/WezTerm.app/Contents/MacOS:$PATH"
 
 # Set GOROOT
 export GOROOT="/opt/homebrew/opt/go/libexec"
 
 # Add GOBIN to PATH
-export PATH="$PATH:$HOME/go/bin"
+export PATH="$HOME/go/bin:$PATH"
 
 # Add Cargo Bin to path.
-export PATH="$PATH:$HOME/.cargo/bin"
+export PATH="$HOME/.cargo/bin:$PATH"
 
 # Use GCC
 export PATH="/usr/local/bin:$PATH"
@@ -194,27 +212,10 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 # Add Mason executables to PATH
-export PATH="$PATH:$HOME/.local/share/nvim/mason/bin"
-
-# Maven
-export M2_HOME="/opt/homebrew/bin/mvn"
-export PATH="$JAVA_HOME/bin:$M2_HOME/bin:$PATH"
-
-# PostgreSQL
-export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
-
-# OpenSSL
-export PATH="/opt/homebrew/opt/openssl@3.0/bin:$PATH"
+export PATH="$HOME/.local/share/nvim/mason/bin:$PATH"
 
 # GNU-time
 export PATH="/opt/homebrew/opt/gnu-time/libexec/gnubin:$PATH"
-
-export LDFLAGS="-L/usr/local/opt/openssl/lib"
-export CPPFLAGS="-I/usr/local/opt/openssl/include"
-
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 # GitLab GPG Key compatibility with Powerlevel10k
 export GPG_TTY=$(tty)
@@ -228,32 +229,10 @@ export BAT_THEME=tokyonight_night
 
 # FD - find alternative
 export FZF_DEFAULT_COMMAND="fd --hidden --strip-cwd-prefix --exclude .git"
-
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_CTRL_T_OPTS="--preview 'bat -n --color=always --line-range :500 {}"
-
 export FZF_ALT_C_COMMAND="fd --type=d -hidden --strip-cwd-prefix --exclude .git"
 export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always {} | head -200'"
-# =============================================================================
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$("$HOME/miniforge3/bin/conda" 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-  eval "$__conda_setup"
-else
-  if [ -f "$HOME/miniforge3/etc/profile.d/conda.sh" ]; then
-    . "$HOME/miniforge3/etc/profile.d/conda.sh"
-  else
-    export PATH="$HOME/miniforge3/bin:$PATH"
-  fi
-fi
-unset __conda_setup
-
-if [ -f "$HOME/miniforge3/etc/profile.d/mamba.sh" ]; then
-  . "$HOME/miniforge3/etc/profile.d/mamba.sh"
-fi
-# <<< conda initialize <<<
 
 # ============================== Alias Definitions ============================
 # Use neo-vim by default
@@ -262,12 +241,6 @@ alias vim='nvim'
 # Use bat instead of built-in cat
 alias cat='bat'
 
-# Compile C++ with GCC
-alias gpp='g++-14 -std=c++23 -O3'
-
-# Compile C++ files with clang++
-alias cpp='clang++ -std=c++20 -stdlib=libc++'
-
 # Use eza instead of ls
 # alias ls='eza --grid --color=always --icons=always --long --git --no-filesize --no-time --no-user --no-permissions'
 alias ls='eza --grid --color=always --icons=always'
@@ -275,11 +248,10 @@ alias ls='eza --grid --color=always --icons=always'
 # cd to Git Repository Project root
 alias cdr='cd $(git rev-parse --show-toplevel)'
 
-alias gfixup='git add . && git commit -m 'fixup' && git rebase -i HEAD~2'
 # =============================================================================
 
 # Forgot what was this for...
 . "$HOME/.local/bin/env"
 
-# https://starship.rs/
+# Starship Prompt: https://starship.rs/
 eval "$(starship init zsh)"
