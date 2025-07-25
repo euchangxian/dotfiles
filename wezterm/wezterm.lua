@@ -90,17 +90,15 @@ end)
 config.keys = {}
 
 for i = 1, 9 do
-	-- Option + number to activate that window
-	table.insert(config.keys, {
-		key = tostring(i),
-		mods = "SUPER",
-		action = wezterm.action.ActivateWindow(i - 1),
-	})
-
-	-- CMD + number to activate that tab
 	table.insert(config.keys, {
 		key = tostring(i),
 		mods = "OPT",
+		action = wezterm.action.ActivateWindow(i - 1),
+	})
+
+	table.insert(config.keys, {
+		key = tostring(i),
+		mods = "SUPER",
 		action = wezterm.action.ActivateTab(i - 1),
 	})
 end

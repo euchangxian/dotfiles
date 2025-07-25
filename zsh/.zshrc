@@ -170,6 +170,20 @@ function syncdir() {
     done
 }
 
+function gitrebasechain() {
+  if [[ "$#" < 2 ]]; then
+    error "Usage: gitrebasechain <BASE_BRANCH> <BRANCH_1> [<BRANCH_2> ... <BRANCH_N>]"
+  fi
+
+  local BASE_BRANCH="$1"
+  shift
+  for branch in "$@"; do
+    
+    BASE_BRANCH=${branch}
+  done
+  shift
+}
+
 # =============================================================================
 #                   PATH/Bin Variables/Other Exports
 # =============================================================================
