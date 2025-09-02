@@ -22,7 +22,7 @@
 template <bool ReturnMatching = false,
           bool ZeroIndexed = true,
           typename T = long long>
-typename std::conditional<ReturnMatching, std::pair<T, std::vector<T>>, T>::type
+typename std::conditional_t<ReturnMatching, std::pair<T, std::vector<T>>, T>
 Hungarian(const std::vector<std::vector<T>>& costMatrix) {
   constexpr T INF = std::numeric_limits<T>::max();
 
@@ -117,26 +117,26 @@ Hungarian(const std::vector<std::vector<T>>& costMatrix) {
   // If we're not returning matching, just return the cost
   if constexpr (!ReturnMatching) {
     return -v[0];  // Return just min cost
-  }
-
-  // Extract matching based on indexing preference
-  std::vector<T> matching;
-  if constexpr (ZeroIndexed) {
-    // Return 0-indexed matching
-    matching.resize(n, -1);
-    for (T j = 1; j <= m; ++j) {
-      if (p[j] != 0) {
-        matching[p[j] - 1] = j - 1;
-      }
-    }
   } else {
-    // Return 1-indexed matching
-    matching.resize(n + 1);
-    for (T j = 1; j <= m; ++j) {
-      if (p[j] != 0) {
-        matching[p[j]] = j;
+    // Extract matching based on indexing preference
+    std::vector<T> matching;
+    if constexpr (ZeroIndexed) {
+      // Return 0-indexed matching
+      matching.resize(n, -1);
+      for (T j = 1; j <= m; ++j) {
+        if (p[j] != 0) {
+          matching[p[j] - 1] = j - 1;
+        }
+      }
+    } else {
+      // Return 1-indexed matching
+      matching.resize(n + 1);
+      for (T j = 1; j <= m; ++j) {
+        if (p[j] != 0) {
+          matching[p[j]] = j;
+        }
       }
     }
+    return {-v[0], matching};  // Return {min_cost, matching}
   }
-  return {-v[0], matching};  // Return {min_cost, matching}
 }
