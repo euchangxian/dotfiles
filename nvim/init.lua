@@ -1,6 +1,8 @@
 -- bootstrap lazy.nvim, LazyVim and your plugins
 require("config.lazy")
 
+vim.keymap.set("n", "<leader>r", vim.lsp.buf.rename, { desc = "LSP: Rename" })
+
 local function is_codeforces_directory()
   local current_dir = vim.fn.getcwd()
   return string.match(current_dir, "CodeForces/?$") -- Main CodeForces directory

@@ -51,7 +51,7 @@ vim.g.bigfile_size = 1024 * 1024 * 1.5 -- 1.5 MB
 vim.g.trouble_lualine = true
 
 -- Turn off LSP log
-vim.lsp.set_log_level("OFF")
+vim.lsp.set_log_level("WARN")
 
 vim.env.TERM = "xterm-256color" -- Set terminal type for better compatibility
 

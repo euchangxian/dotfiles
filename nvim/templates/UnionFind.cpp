@@ -9,7 +9,7 @@ class UnionFind {
     }
   }
 
-  int find(int x) {
+  int find(int x) noexcept {
     if (parent_[x] != x) {
       parent_[x] = find(parent_[x]);
     }

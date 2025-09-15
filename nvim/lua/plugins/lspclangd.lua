@@ -6,6 +6,7 @@ return {
         clangd = {
           cmd = {
             "clangd",
+            "--query-driver=/opt/homebrew/bin/g++-15",
             "--enable-config",
             "--background-index",
             "--clang-tidy",
