@@ -55,11 +55,11 @@ vim.keymap.set("n", "<leader>tr", function()
   paste_template("RadixSort.cpp")
 end, { desc = "Paste Radix/Counting Sort template" })
 
-vim.keymap.set("n", "<leader>ts", function()
+vim.keymap.set("n", "<leader>tSC", function()
   paste_template("SCC.cpp")
 end, { desc = "Paste Tarjan SCC template" })
 
-vim.keymap.set("n", "<leader>tS", function()
+vim.keymap.set("n", "<leader>tSA", function()
   paste_template("SuffixArray.cpp")
 end, { desc = "Paste Suffix Array template" })
 

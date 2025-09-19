@@ -2,10 +2,57 @@ return {
   "folke/snacks.nvim",
   priority = 1000,
   lazy = false,
-  ---@type snacks.Config
   opts = {
     bigfile = { enabled = true },
-    dashboard = { enabled = true },
+    dashboard = {
+      enabled = true,
+      width = 40,
+      row = nil, -- dashboard position. nil for center
+      col = nil, -- dashboard position. nil for center
+      pane_gap = 20, -- empty columns between vertical panes
+      autokeys = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", -- autokey sequence
+      preset = {
+        pick = nil,
+        header = [[
+       _                            _             
+   ___| |__   __ _ _ __   __ ___  _(_) __ _ _ __  
+  / __| '_ \ / _` | '_ \ / _` \ \/ / |/ _` | '_ \ 
+ | (__| | | | (_| | | | | (_| |>  <| | (_| | | | |
+  \___|_| |_|\__,_|_| |_|\__, /_/\_\_|\__,_|_| |_|
+                         |___/                    
+
+]],
+      },
+      sections = {
+        { section = "header" },
+        {
+          pane = 2,
+          section = "terminal",
+          cmd = "pokemon-colorscripts --no-title -rn pikachu,charmander,bulbasaur,squirtle,charizard,blastoise,venusaur",
+          height = 20,
+          padding = 1,
+        },
+        { section = "keys", gap = 1, padding = 1 },
+        { pane = 2, icon = " ", title = "Recent Files", section = "recent_files", indent = 2, padding = 1 },
+        { pane = 2, icon = " ", title = "Projects", section = "projects", indent = 2, padding = 1 },
+        {
+          pane = 2,
+          icon = " ",
+          title = "Git Status",
+          section = "terminal",
+          enabled = function()
+            return Snacks.git.get_root() ~= nil
+          end,
+          cmd = "git status --short --branch --renames",
+          height = 5,
+          padding = 1,
+          ttl = 5 * 60,
+          indent = 3,
+        },
+        -- { section = "keys", gap = 1, padding = 1 },
+        { section = "startup" },
+      },
+    },
     explorer = { enabled = true },
     indent = { enabled = true },
     input = { enabled = true },
@@ -13,16 +60,37 @@ return {
       enabled = true,
       timeout = 3000,
     },
-    picker = { enabled = true },
+    picker = {
+      enabled = true,
+      layout = {
+        min_width = 10,
+        width = 0.1,
+        height = 0,
+      },
+    },
     scope = { enabled = true },
     scroll = { enabled = true },
     statuscolumn = { enabled = true },
     words = { enabled = true },
-    lazygit = { enabled = true },
+    lazygit = {
+      enabled = true,
+      config_path = os.getenv("HOME") .. "/.config/lazygit/config.yml",
+    },
+    zen = {
+      {
+        enabled = true,
+        toggles = {
+          dim = true,
+          git_signs = false,
+          mini_diff_signs = false,
+          -- diagnostics = false,
+          -- inlay_hints = false,
+        },
+      },
+    },
     styles = {
       notification = {
-        quickfile = { enabled = true },
-        -- wo = { wrap = true } -- Wrap notifications
+        wo = { wrap = true }, -- Wrap notifications
       },
     },
   },

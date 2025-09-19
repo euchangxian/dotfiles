@@ -1,4 +1,3 @@
--- bootstrap lazy.nvim, LazyVim and your plugins
 require("config.lazy")
 
 vim.keymap.set("n", "<leader>r", vim.lsp.buf.rename, { desc = "LSP: Rename" })
@@ -45,27 +44,3 @@ vim.api.nvim_create_autocmd("BufNewFile", {
   pattern = "*.cpp",
   callback = insert_cpp_template,
 })
-
-vim.api.nvim_create_autocmd({ "FileType" }, {
-  callback = function()
-    if require("nvim-treesitter.parsers").has_parser() then
-      vim.opt.foldmethod = "expr"
-      vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-    else
-      vim.opt.foldmethod = "syntax"
-    end
-  end,
-})
-
--- Lspsaga keymaps
-vim.keymap.set("n", "gd", "<cmd>Lspsaga goto_definition<CR>")
-vim.keymap.set("n", "gR", "<cmd>Lspsaga peek_definition<CR>")
-vim.keymap.set("n", "<leader>ca", "<cmd>Lspsaga code_action<CR>")
-
--- Map gl to show diagnostics in a floating window
-vim.keymap.set(
-  "n",
-  "gl",
-  "<cmd>lua vim.diagnostic.open_float()<CR>",
-  { noremap = true, silent = true, desc = "Show diagnostics in floating window" }
-)
