@@ -1,6 +1,6 @@
 export ZSH="$HOME/.oh-my-zsh"
 
-plugins=(gnu-utils colored-man-pages)
+plugins=(gnu-utils colored-man-pages gitfast)
 
 # ============================ Init Shell =====================================
 # Oh-My-ZSH
@@ -56,7 +56,7 @@ function clip () {
     error "usage: clip <FILE_NAME>"
     return 1
   fi
-  cat "$1" | pbcopy
+  bat --plain --color=never "$1" | pbcopy
 }
 
 # FZF (Fuzzy Finder) Functions
@@ -124,7 +124,6 @@ function runcpp() {
     local cpp_file="$1"
     local executable="${cpp_file%.cpp}"
 
-    # Compile C++ file
     if clang++ -std=c++23 -stdlib=libc++ -fexperimental-library -O3 -DDEBUG -o "$executable" "$cpp_file"; then ./"$executable"
         rm "$executable"
     else
@@ -151,10 +150,54 @@ function runrs() {
     fi
 }
 
+function runocaml() {
+    if [[ "$#" -eq 0 ]]; then
+        echo "Usage: runocaml <FILE_NAME>"
+        return 1
+    fi
+
+    local ocaml_file="$1"
+    local executable="${ocaml_file%.ml}"
+
+    if ocamlopt -o "$executable" "$ocaml_file"; then
+        ./"$executable"
+        rm "$executable"
+    else
+        error "Compilation failed"
+        return 1
+    fi
+}
+
+function cmpr() {
+    if [[ "$#" -eq 0 ]]; then
+        echo "Usage: compnrun <FILE_NAME>"
+        return 1
+    fi
+
+    local file_name="$1"
+    local extension="${file_name##*.}"
+
+    case "$extension" in
+        cpp)
+            runcpp "$file_name"
+            ;;
+        rs)
+            runrs "$file_name"
+            ;;
+        ml)
+            runocaml "$file_name"
+            ;;
+        *)
+            error "Error: Unsupported file extension '$extension'."
+            return 1
+            ;;
+    esac
+}
+
 # Function to sync a directory with a remote host using fswatch
 function syncdir() {
-    local LOCAL_DIR="$1"    # Local directory path to watch
-    local REMOTE_DIR="$2"   # Remote directory path to sync with
+    local LOCAL_DIR="$1"
+    local REMOTE_DIR="$2"
 
     if [[ -z "$LOCAL_DIR" || -z "$REMOTE_DIR" ]]; then
         error "Usage: syncdir <LOCAL_DIR> <REMOTE_DIR>"
@@ -196,7 +239,7 @@ export LESS_TERMCAP_so=$'\e[01;44;33m' # begin reverse video
 export LESS_TERMCAP_se=$'\e[0m'        # reset reverse video
 export LESS_TERMCAP_us=$'\e[1;32m'     # begin underline
 export LESS_TERMCAP_ue=$'\e[0m'        # reset underline
-export LESS='--ignore-case --clear-screen --CLEAR-SCREEN --LONG-PROMPT --RAW-CONTROL-CHARS --tabs=4 --window=4'
+export LESS='--ignore-case --LONG-PROMPT --RAW-CONTROL-CHARS --tabs=4 --window=4'
 export BAT_PAGER="less $LESS"
 
 # Set default config directory
@@ -218,7 +261,7 @@ export PATH="$HOME/go/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 
 # Use GCC
-export PATH="/usr/local/bin:$PATH"
+export PATH="/usr/homebrew/opt/gcc/bin:$PATH"
 
 # Add NVM to PATH
 export NVM_DIR="$HOME/.nvm"
@@ -230,6 +273,15 @@ export PATH="$HOME/.local/share/nvim/mason/bin:$PATH"
 
 # GNU-time
 export PATH="/opt/homebrew/opt/gnu-time/libexec/gnubin:$PATH"
+
+# Use GNU-make: gmake as make
+export PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"
+
+# Use brew M4
+export PATH="/opt/homebrew/opt/m4/bin:$PATH"
+
+# Boost libraries and headers location
+export BOOST_ROOT="/opt/homebrew/Cellar"
 
 # GitLab GPG Key compatibility with Powerlevel10k
 export GPG_TTY=$(tty)
@@ -262,6 +314,9 @@ alias ls='eza --grid --color=always --icons=always'
 # cd to Git Repository Project root
 alias cdr='cd $(git rev-parse --show-toplevel)'
 
+# Rosetta
+alias rosetta="arch -x86_64"
+
 # =============================================================================
 
 # Forgot what was this for...
@@ -269,3 +324,7 @@ alias cdr='cd $(git rev-parse --show-toplevel)'
 
 # Starship Prompt: https://starship.rs/
 eval "$(starship init zsh)"
+
+# OCaml (CS4212)
+[[ ! -r '/Users/euchangxian/.opam/opam-init/init.zsh' ]] || source '/Users/euchangxian/.opam/opam-init/init.zsh' > /dev/null 2> /dev/null
+eval $(opam env)

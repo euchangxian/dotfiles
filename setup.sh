@@ -71,6 +71,7 @@ HOME_DOTFILES=(
   "zsh/.zprofile"
   "git/.gitconfig"
   "git/.gitignore_global"
+  "tmux/.tmux.conf"
   "grc"
 )
 XDG_CONFIG_DOTFILES=(
@@ -85,7 +86,7 @@ XDG_CONFIG_DOTFILES=(
   "lazygit"
 )
 
-# src dest
+# <src dest>
 ADDITIONAL_DOTFILES=(
   "macos/Library/Preferences/clangd/config.yaml $HOME/Library/Preferences/clangd"
 )
