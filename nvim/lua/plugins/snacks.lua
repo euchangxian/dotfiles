@@ -77,15 +77,13 @@ return {
       config_path = os.getenv("HOME") .. "/.config/lazygit/config.yml",
     },
     zen = {
-      {
-        enabled = true,
-        toggles = {
-          dim = true,
-          git_signs = false,
-          mini_diff_signs = false,
-          -- diagnostics = false,
-          -- inlay_hints = false,
-        },
+      enabled = true,
+      toggles = {
+        dim = true,
+        git_signs = false,
+        mini_diff_signs = false,
+        -- diagnostics = false,
+        -- inlay_hints = false,
       },
     },
     styles = {

@@ -6,6 +6,5 @@ return {
     require("tiny-inline-diagnostic").setup({
       preset = "amongus",
     })
-    vim.diagnostic.config({ virtual_text = false })
   end,
 }

@@ -55,6 +55,8 @@ vim.lsp.set_log_level("WARN")
 
 vim.env.TERM = "xterm-256color" -- Set terminal type for better compatibility
 
+vim.diagnostic.config({ virtual_text = false })
+
 local opt = vim.opt
 
 opt.autowrite = true -- Enable auto write
