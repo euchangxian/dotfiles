@@ -76,7 +76,7 @@ HOME_DOTFILES=(
 )
 XDG_CONFIG_DOTFILES=(
   "starship/starship.toml"
-  "wezterm"
+  "ghostty"
   "nvim"
   "fzf-git.sh"
   "bat"
