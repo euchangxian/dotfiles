@@ -1,7 +1,37 @@
+shell-integration = "detect"
+
 font-family = "JetBrainsMono Nerd Font"
 font-size = 13.0
 
-theme = TokyoNight Moon
+window-height = 160
+window-width = 160
 
-window-height = 120
-window-width = 80
+background-image = "night-sky.jpeg"
+background-image-opacity = 0.2
+background-image-fit = "cover"
+
+clipboard-trim-trailing-spaces = "true"
+
+# New Splits
+keybind = alt+d=new_split:right
+keybind = alt+shift+d=new_split:down
+
+# Split Navigation
+keybind = ctrl+h=goto_split:left
+keybind = ctrl+l=goto_split:right
+keybind = ctrl+j=goto_split:down
+keybind = ctrl+k=goto_split:up
+
+# Quick Terminal
+keybind = global:cmd+shift+t=toggle_quick_terminal
+quick-terminal-screen = "mouse"
+quick-terminal-position = "bottom"
+
+# MacOS specifics
+macos-titlebar-style = "tabs"
+macos-icon = "retro"
+macos-icon-frame = "chrome"
+
+# Fix Escape Sequences
+keybind = shift+enter=text:\r
+keybind = ctrl+enter=text:\r
