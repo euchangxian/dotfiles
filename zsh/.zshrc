@@ -14,7 +14,6 @@ bindkey '^[[Z' autosuggest-accept # Bind shift-tab to accept Auto Suggestions
 
 # ZSH Syntax Highlighting
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-. /opt/homebrew/etc/profile.d/z.sh
 
 # Fuzzy Finder
 source <(fzf --zsh)
@@ -242,8 +241,9 @@ export LESS_TERMCAP_ue=$'\e[0m'        # reset underline
 export LESS='--ignore-case --LONG-PROMPT --RAW-CONTROL-CHARS --tabs=4 --window=4'
 export BAT_PAGER="less $LESS"
 
-# Set default config directory
+# Set default config/data directory
 export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
 
 # Add homebrew binaries to PATH
 export PATH="/opt/homebrew/bin:$PATH"
@@ -326,5 +326,9 @@ alias rosetta="arch -x86_64"
 eval "$(starship init zsh)"
 
 # OCaml (CS4212)
-[[ ! -r '/Users/euchangxian/.opam/opam-init/init.zsh' ]] || source '/Users/euchangxian/.opam/opam-init/init.zsh' > /dev/null 2> /dev/null
+[[ ! -r "${HOME}/.opam/opam-init/init.zsh" ]] || source "${HOME}/.opam/opam-init/init.zsh" > /dev/null 2> /dev/null
 eval $(opam env)
+
+# zoxide - fast cd
+export _ZO_DATA_DIR="$XDG_DATA_HOME"
+eval "$(zoxide init zsh)"

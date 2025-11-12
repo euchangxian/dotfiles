@@ -74,9 +74,10 @@ HOME_DOTFILES=(
   "tmux/.tmux.conf"
   "grc"
 )
+
 XDG_CONFIG_DOTFILES=(
-  "starship/starship.toml"
   "ghostty"
+  "starship/starship.toml"
   "nvim"
   "fzf-git.sh"
   "bat"
@@ -233,6 +234,7 @@ install_node_lts
 header "SETTING UP HOME DIRECTORY DOTFILES"
 for src_path in "${HOME_DOTFILES[@]}"; do
   create_symlink "${src_path}" "${HOME}"
+  echo ""
 done
 
 # .config directory dotfiles
@@ -240,6 +242,7 @@ header "SETTING UP .CONFIG DIRECTORY DOTFILES"
 run_cmd mkdir -p "${XDG_CONFIG_HOME}"
 for src_path in "${XDG_CONFIG_DOTFILES[@]}"; do
   create_symlink "${src_path}" "${XDG_CONFIG_HOME}"
+  echo ""
 done
 
 # Additional configurations
@@ -247,6 +250,7 @@ header "SETTING UP ADDITIONAL CONFIGURATIONS"
 for file_pair in "${ADDITIONAL_DOTFILES[@]}"; do
   read -r src_path dest_dir <<<"${file_pair}"
   create_symlink "${src_path}" "${dest_dir}"
+  echo ""
 done
 
 header "Dotfiles setup completed successfully!"
