@@ -6,21 +6,25 @@ font-size = 13.0
 window-height = 160
 window-width = 160
 
+theme = "TokyoNight Storm"
+
 background-image = "night-sky.jpeg"
-background-image-opacity = 0.2
+background-image-opacity = 0.10
 background-image-fit = "cover"
 
 clipboard-trim-trailing-spaces = "true"
+
+# Window Navigation
 
 # New Splits
 keybind = alt+d=new_split:right
 keybind = alt+shift+d=new_split:down
 
 # Split Navigation
-keybind = ctrl+h=goto_split:left
-keybind = ctrl+l=goto_split:right
-keybind = ctrl+j=goto_split:down
-keybind = ctrl+k=goto_split:up
+keybind = ctrl+shift+h=goto_split:left
+keybind = ctrl+shift+l=goto_split:right
+keybind = ctrl+shift+j=goto_split:down
+keybind = ctrl+shift+k=goto_split:up
 
 # Quick Terminal
 keybind = global:cmd+shift+t=toggle_quick_terminal
