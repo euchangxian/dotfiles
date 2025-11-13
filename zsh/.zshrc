@@ -58,6 +58,19 @@ function clip () {
   bat --plain --color=never "$1" | pbcopy
 }
 
+# Copy terminal buffer to clipboard
+function bufftoclip() {
+  if [ "$#" -ne 0 ]; then
+    error "usage: bufftoclip"
+    return 1
+  fi
+  print -n "$BUFFER" | pbcopy
+}
+
+# Register to ZSH and bind to CMD-Y
+zle -N bufftoclip
+bindkey '^o' bufftoclip
+
 # FZF (Fuzzy Finder) Functions
 # Use fd (https://github.com/sharkdp/fd) for listing path candidates.
 # - The first argument to the function ($1) is the base path to start traversal
