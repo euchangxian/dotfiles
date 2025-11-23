@@ -14,6 +14,8 @@ background-image-fit = "cover"
 
 clipboard-trim-trailing-spaces = "true"
 
+unfocused-split-opacity = 0.9
+
 # Window Navigation
 
 # New Splits
