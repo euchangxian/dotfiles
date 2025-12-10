@@ -72,7 +72,6 @@ HOME_DOTFILES=(
   "git/.gitconfig"
   "git/.gitignore_global"
   "tmux/.tmux.conf"
-  "grc"
 )
 
 XDG_CONFIG_DOTFILES=(
@@ -80,6 +79,7 @@ XDG_CONFIG_DOTFILES=(
   "starship/starship.toml"
   "nvim"
   "fzf-git.sh"
+  "fzf-tab"
   "bat"
   "rclone"
   "pokemon-colorscripts"

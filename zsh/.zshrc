@@ -6,6 +6,10 @@ plugins=(gnu-utils colored-man-pages gitfast)
 # Oh-My-ZSH
 source $ZSH/oh-my-zsh.sh
 
+# Set default config/data directory.
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+
 # ZSH Auto Suggestions
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=244,bold"
@@ -18,6 +22,31 @@ source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # Fuzzy Finder
 source <(fzf --zsh)
 source ~/.config/fzf-git.sh/fzf-git.sh
+
+# fzf-tab
+autoload -U compinit; compinit
+source $XDG_CONFIG_HOME/fzf-tab/fzf-tab.plugin.zsh
+
+# fzf-tab configuration
+# disable sort when completing `git checkout`
+zstyle ':completion:*:git-checkout:*' sort false
+# set descriptions format to enable group support
+# NOTE: don't use escape sequences (like '%F{red}%d%f') here, fzf-tab will ignore them
+zstyle ':completion:*:descriptions' format '[%d]'
+# set list-colors to enable filename colorizing
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+# force zsh not to show completion menu, which allows fzf-tab to capture the unambiguous prefix
+zstyle ':completion:*' menu no
+# preview directory's content with eza when completing cd
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+# custom fzf flags
+# NOTE: fzf-tab does not follow FZF_DEFAULT_OPTS by default
+zstyle ':fzf-tab:*' fzf-flags --color=fg:1,fg+:2 --bind=tab:accept
+# To make fzf-tab follow FZF_DEFAULT_OPTS.
+# NOTE: This may lead to unexpected behavior since some flags break this plugin. See Aloxaf/fzf-tab#455.
+zstyle ':fzf-tab:*' use-fzf-default-opts yes
+# switch group using `<` and `>`
+zstyle ':fzf-tab:*' switch-group '<' '>'
 
 # ======================= Helper Variables/Functions ===========================
 RED="\e[31m"
@@ -67,7 +96,7 @@ function bufftoclip() {
   print -n "$BUFFER" | pbcopy
 }
 
-# Register to ZSH and bind to CMD-Y
+# Copy terminal buffer using CMD-Y
 zle -N bufftoclip
 bindkey '^o' bufftoclip
 
@@ -180,32 +209,6 @@ function runocaml() {
     fi
 }
 
-function cmpr() {
-    if [[ "$#" -eq 0 ]]; then
-        echo "Usage: compnrun <FILE_NAME>"
-        return 1
-    fi
-
-    local file_name="$1"
-    local extension="${file_name##*.}"
-
-    case "$extension" in
-        cpp)
-            runcpp "$file_name"
-            ;;
-        rs)
-            runrs "$file_name"
-            ;;
-        ml)
-            runocaml "$file_name"
-            ;;
-        *)
-            error "Error: Unsupported file extension '$extension'."
-            return 1
-            ;;
-    esac
-}
-
 # Function to sync a directory with a remote host using fswatch
 function syncdir() {
     local LOCAL_DIR="$1"
@@ -225,20 +228,6 @@ function syncdir() {
     done
 }
 
-function gitrebasechain() {
-  if [[ "$#" < 2 ]]; then
-    error "Usage: gitrebasechain <BASE_BRANCH> <BRANCH_1> [<BRANCH_2> ... <BRANCH_N>]"
-  fi
-
-  local BASE_BRANCH="$1"
-  shift
-  for branch in "$@"; do
-    
-    BASE_BRANCH=${branch}
-  done
-  shift
-}
-
 # =============================================================================
 #                   PATH/Bin Variables/Other Exports
 # =============================================================================
@@ -253,10 +242,6 @@ export LESS_TERMCAP_us=$'\e[1;32m'     # begin underline
 export LESS_TERMCAP_ue=$'\e[0m'        # reset underline
 export LESS='--ignore-case --LONG-PROMPT --RAW-CONTROL-CHARS --tabs=4 --window=4'
 export BAT_PAGER="less $LESS"
-
-# Set default config/data directory
-export XDG_CONFIG_HOME="$HOME/.config"
-export XDG_DATA_HOME="$HOME/.local/share"
 
 # Add homebrew binaries to PATH
 export PATH="/opt/homebrew/bin:$PATH"
