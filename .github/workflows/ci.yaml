@@ -50,3 +50,24 @@ jobs:
           name: dotty-binaries
           path: dotty-*
           if-no-files-found: error
+
+  release:
+    name: Publish Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dotty-binaries
+
+      - name: Update 'latest' Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Development Build (Latest)
+          files: dotty-*
+          make_latest: true
+          prerelease: true
