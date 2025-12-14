@@ -36,9 +36,9 @@ function ask() {
 }
 function run_cmd() {
   echo -e "[${CYAN}CMD${NC}] " "$@"
-  if [ ${DRY_RUN} == true ]; then
-    return 0
-  fi
+  # if [ ${DRY_RUN} == true ]; then
+  #   return 0
+  # fi
   "$@"
 }
 function command_exists() {
@@ -81,9 +81,6 @@ DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/${BINARY_N
 info "Bootstrapping Dotty for ${OS}/${ARCH}..."
 info "Downloading from: ${DOWNLOAD_URL}"
 
-# Ensure directory exists
-mkdir -p "$BIN_DIR"
-
 if command -v curl >/dev/null 2>&1; then
   run_cmd curl -L -o "${BIN_DIR}/dotty" "$DOWNLOAD_URL"
 elif command -v wget >/dev/null 2>&1; then
@@ -94,5 +91,6 @@ fi
 
 chmod +x "${BIN_DIR}/dotty"
 
-cd "$BIN_DIR"
+pushd "$BIN_DIR" >/dev/null 2>&1
 ./dotty "$@"
+popd >/dev/null 2>&1

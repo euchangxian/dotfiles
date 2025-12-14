@@ -152,11 +152,7 @@ stages:
 
       - name: oh-my-zsh
         instructions:
-          fedora:
-            manager: shell
-            check: test -d ~/.oh-my-zsh
-            install: curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-          darwin:
+          default:
             manager: shell
             check: test -d ~/.oh-my-zsh
             install: curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
@@ -198,9 +194,13 @@ stages:
         instructions:
           darwin: { manager: brew, package: ghostty }
           fedora:
-            manager: shell
-            check: "flatpak list | grep com.mitchellh.ghostty"
-            install: "echo 'Manual Ghostty install required on Fedora'"
+            manager: dnf
+            package: ghostty
+            hooks:
+              before:
+                - "sudo dnf copr enable -y scottames/ghostty"
+
+        hooks:
 
   - name: fonts
     description: "Nerd Fonts"
@@ -208,4 +208,61 @@ stages:
       - name: jetbrains-mono
         instructions:
           darwin: { manager: brew, package: font-jetbrains-mono-nerd-font }
-          fedora: { manager: font, font_name: JetBrainsMono }
+          fedora:
+            manager: dnf
+            font_name: jetbrains-mono-nerd-font
+            hooks:
+              before:
+                - "sudo dnf copr enable -y maveonair/jetbrains-mono-nerd-font"
+
+  - name: dotfiles
+    description: "Symlink Configuration Files"
+    steps:
+      - name: home-configs
+        instructions:
+          default:
+            manager: symlink
+            links:
+              - { source: "zsh/.zshrc", target: "~/.zshrc" }
+              - { source: "zsh/.zprofile", target: "~/.zprofile" }
+              - { source: "git/.gitconfig", target: "~/.gitconfig" }
+              - {
+                  source: "git/.gitignore_global",
+                  target: "~/.gitignore_global",
+                }
+              - { source: "tmux/.tmux.conf", target: "~/.tmux.conf" }
+
+      - name: xdg-configs
+        instructions:
+          default:
+            manager: symlink
+            links:
+              - { source: "ghostty", target: "~/.config/ghostty" }
+              - {
+                  source: "starship/starship.toml",
+                  target: "~/.config/starship.toml",
+                }
+              - { source: "nvim", target: "~/.config/nvim" }
+              - { source: "fzf-git.sh", target: "~/.config/fzf-git.sh" }
+              - { source: "fzf-tab", target: "~/.config/fzf-tab" }
+              - { source: "bat", target: "~/.config/bat" }
+              - { source: "rclone", target: "~/.config/rclone" }
+              - {
+                  source: "pokemon-colorscripts",
+                  target: "~/.config/pokemon-colorscripts",
+                }
+              - {
+                  source: "shell-color-scripts",
+                  target: "~/.config/shell-color-scripts",
+                }
+              - { source: "lazygit", target: "~/.config/lazygit" }
+
+      - name: misc-configs
+        instructions:
+          default:
+            manager: symlink
+            links:
+              - {
+                  source: "macos/Library/Preferences/clangd/config.yaml",
+                  target: "/Library/Preferences/clangd/config.yaml",
+                }

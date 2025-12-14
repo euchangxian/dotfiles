@@ -81,10 +81,11 @@ func main() {
 	}
 
 	managers := map[string]engine.Manager{
-		manifest.ManagerShell: &managers.Shell{},
-		manifest.ManagerDNF:   &managers.Dnf{},
-		manifest.ManagerBrew:  &managers.Homebrew{},
-		manifest.ManagerCargo: &managers.Cargo{},
+		manifest.ManagerShell:   &managers.Shell{},
+		manifest.ManagerDNF:     &managers.Dnf{},
+		manifest.ManagerBrew:    &managers.Homebrew{},
+		manifest.ManagerCargo:   &managers.Cargo{},
+		manifest.ManagerSymlink: &managers.Symlink{},
 	}
 
 	sh := shell.New(*dryRun, logFile)
@@ -95,6 +96,8 @@ func main() {
 	for _, s := range packages.Stages {
 		for _, step := range s.Steps {
 			if _, ok := step.Instructions[targetOS]; ok {
+				totalChecks++
+			} else if _, ok := step.Instructions[manifest.OSDefault]; ok {
 				totalChecks++
 			}
 		}

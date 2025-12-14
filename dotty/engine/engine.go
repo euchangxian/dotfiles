@@ -85,14 +85,6 @@ func New(shell Shell, targetOS manifest.OSName, managers map[manifest.ManagerNam
 
 // Plan concurrently checks all steps.
 func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]PlannedStep, error) {
-	// var (
-	// 	steps       []PlannedStep
-	// 	mutex       sync.Mutex
-	// 	wg          sync.WaitGroup
-	// 	errs        []error
-	// 	totalChecks int
-	// )
-
 	type workItem struct {
 		Index    int
 		StepName string
@@ -102,14 +94,23 @@ func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]Plann
 	globalIndex := 0
 	for _, stage := range m.Stages {
 		for _, step := range stage.Steps {
-			if instr, ok := step.Instructions[e.Ctx.OS]; ok {
-				work = append(work, workItem{
-					Index:    globalIndex,
-					StepName: step.Name,
-					Instr:    instr,
-				})
-				globalIndex++
+			instr, ok := step.Instructions[e.Ctx.OS]
+
+			// check default
+			if !ok {
+				instr, ok = step.Instructions[manifest.OSDefault]
 			}
+
+			if !ok {
+				continue
+			}
+
+			work = append(work, workItem{
+				Index:    globalIndex,
+				StepName: step.Name,
+				Instr:    instr,
+			})
+			globalIndex++
 		}
 	}
 
@@ -185,19 +186,16 @@ func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]Plann
 
 // checkExistence abstracts the logic for checking if a package exists.
 func (e *Engine) checkExistence(instr manifest.Instruction) (bool, error) {
-	// 1. Explicit Check Command
 	if instr.CheckCmd != "" {
-		err := e.Ctx.Shell.Run("sh", []string{"-c", instr.CheckCmd}, e.Ctx.PATH)
+		_, err := e.Ctx.Shell.Output("sh", []string{"-c", instr.CheckCmd}, e.Ctx.PATH)
 		return (err == nil), nil
 	}
 
-	// 2. Binary Existence Check (LookPath)
 	if instr.Binary != "" {
 		_, err := exec.LookPath(instr.Binary)
 		return (err == nil), nil
 	}
 
-	// 3. Manager Default Check
 	if mgr, ok := e.Managers[instr.Manager]; ok {
 		return mgr.Exists(e.Ctx, instr), nil
 	}
@@ -213,6 +211,23 @@ func (e *Engine) Execute(steps []PlannedStep, progress chan<- ProgressMsg) error
 	for i, step := range steps {
 		instruction := *step.Instruction
 		manager := e.Managers[instruction.Manager]
+
+		if len(instruction.Hooks.Before) > 0 {
+			progress <- ProgressMsg{
+				Name:    step.Name,
+				Status:  "Running Pre-hooks",
+				Details: "Setting up dependencies...",
+				Current: i + 1,
+				Total:   len(steps),
+			}
+
+			for _, cmd := range instruction.Hooks.Before {
+				// Use the shell to run the hook
+				if err := e.Ctx.Shell.Run("sh", []string{"-c", cmd}, e.Ctx.PATH); err != nil {
+					return fmt.Errorf("step '%s' pre-hook failed: %w", step.Name, err)
+				}
+			}
+		}
 
 		progress <- ProgressMsg{
 			Name:    step.Name,

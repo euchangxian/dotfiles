@@ -10,18 +10,20 @@ import (
 type OSName = string
 
 const (
-	OSFedora OSName = "fedora"
-	OSMac    OSName = "darwin"
+	OSFedora  OSName = "fedora"
+	OSMac     OSName = "darwin"
+	OSDefault OSName = "default"
 )
 
 type ManagerName = string
 
 const (
-	ManagerBrew  ManagerName = "brew"
-	ManagerDNF   ManagerName = "dnf"
-	ManagerCargo ManagerName = "cargo"
-	ManagerGo    ManagerName = "go"
-	ManagerShell ManagerName = "shell"
+	ManagerBrew    ManagerName = "brew"
+	ManagerDNF     ManagerName = "dnf"
+	ManagerCargo   ManagerName = "cargo"
+	ManagerGo      ManagerName = "go"
+	ManagerShell   ManagerName = "shell"
+	ManagerSymlink ManagerName = "symlink"
 )
 
 type Manifest struct {
@@ -40,6 +42,11 @@ type Step struct {
 	Instructions map[OSName]Instruction `yaml:"instructions"`
 }
 
+type Link struct {
+	Source string `yaml:"source"`
+	Target string `yaml:"target"`
+}
+
 type Instruction struct {
 	Manager ManagerName `yaml:"manager"`
 
@@ -56,13 +63,13 @@ type Instruction struct {
 	InstallCmd string `yaml:"install,omitempty"`
 	Package    string `yaml:"package,omitempty"`
 
-	FontName string `yaml:"font_name,omitempty"`
-
-	Hooks Hooks `yaml:"hooks"`
+	Links []Link `yaml:"links,omitempty"`
+	Hooks Hooks  `yaml:"hooks"`
 }
 
 type Hooks struct {
-	After []string
+	Before []string `yaml:"before,omitempty"`
+	After  []string `yaml:"after,omitempty"`
 }
 
 func Parse(path string) (Manifest, error) {
