@@ -1,0 +1,52 @@
+name: Build Dotty
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "dotty/**"
+      - ".github/workflows/ci.yaml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "dotty/**"
+
+jobs:
+  build:
+    name: Build All Platforms
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./dotty
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "dotty/go.mod"
+          cache-dependency-path: dotty/go.sum
+
+      - name: Install Dependencies
+        run: go mod tidy
+
+      - name: Build Binaries
+        run: |
+          # Enable static linking
+          export CGO_ENABLED=0
+
+          echo "Building for Linux (amd64)..."
+          GOOS=linux GOARCH=amd64 go build -v -o ../dotty-linux-amd64 .
+
+          echo "Building for macOS (Apple Silicon)..."
+          GOOS=darwin GOARCH=arm64 go build -v -o ../dotty-darwin-arm64 .
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotty-binaries
+          path: dotty-*
+          if-no-files-found: error

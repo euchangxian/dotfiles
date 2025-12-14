@@ -1,0 +1,211 @@
+stages:
+  - name: bootstrap
+    description: "OS-specific repository setup and build tools"
+    steps:
+      - name: rpm-fusion
+        instructions:
+          fedora:
+            manager: shell
+            check: "dnf repolist | grep rpmfusion-nonfree"
+            install: "sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y"
+
+      - name: build-tools
+        instructions:
+          fedora: { manager: dnf, package: "@development-tools" }
+
+  - name: toolchains
+    description: "Compilers and Interpreters (Rust, Go, Node, Python)"
+    steps:
+      - name: rust
+        env_update: true
+        instructions:
+          darwin: { manager: brew, package: rust }
+          fedora: { manager: dnf, package: cargo }
+
+      - name: go
+        env_update: true
+        instructions:
+          darwin: { manager: brew, package: go }
+          fedora: { manager: dnf, package: golang }
+
+      - name: cmake
+        instructions:
+          darwin: { manager: brew, package: cmake }
+          fedora: { manager: dnf, package: cmake }
+
+      - name: nvm
+        env_update: true
+        instructions:
+          darwin: { manager: brew, package: nvm }
+          fedora:
+            manager: shell
+            check: "test -d $HOME/.nvm"
+            install: "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash"
+
+      - name: uv
+        description: "Python package installer and resolver"
+        env_update: true
+        instructions:
+          darwin: { manager: brew, package: uv }
+          fedora: { manager: dnf, package: uv }
+
+  - name: core
+    description: "Modern Unix Utilities"
+    steps:
+      - name: bat
+        description: "cat replacement"
+        instructions:
+          darwin: { manager: brew, package: bat }
+          fedora: { manager: cargo, package: bat }
+        hooks:
+          after: ["bat cache --build"]
+
+      - name: fd
+        description: "find replacement"
+        instructions:
+          darwin: { manager: brew, package: fd }
+          fedora: { manager: cargo, package: fd }
+
+      - name: eza
+        description: "ls replacement"
+        instructions:
+          darwin: { manager: brew, package: eza }
+          fedora: { manager: cargo, package: eza }
+
+      - name: ripgrep
+        description: "grep replacement"
+        instructions:
+          darwin: { manager: brew, package: ripgrep }
+          fedora: { manager: cargo, package: ripgrep }
+
+      - name: fzf
+        description: "Fuzzy Finder"
+        instructions:
+          darwin: { manager: brew, package: fzf }
+          fedora: { manager: dnf, package: fzf }
+
+      - name: zoxide
+        description: "Smarter cd"
+        instructions:
+          darwin: { manager: brew, package: zoxide }
+          fedora: { manager: dnf, package: zoxide }
+
+      - name: git-delta
+        description: "Syntax-Highlighting Pager for git"
+        instructions:
+          darwin: { manager: brew, package: git-delta }
+          fedora: { manager: dnf, package: git-delta }
+
+      - name: tealdeer
+        description: "Fetch and show TLDR help pages for many CLI commands"
+        instructions:
+          darwin: { manager: brew, package: tealdeer }
+          fedora: { manager: dnf, package: tealdeer }
+
+      - name: jq
+        description: "Command-line JSON processor"
+        instructions:
+          darwin: { manager: brew, package: jq }
+          fedora: { manager: dnf, package: jq }
+
+  - name: utils
+    description: "Standard CLI Tools"
+    steps:
+      - name: tree
+        description: "Show directory structure"
+        instructions:
+          darwin: { manager: brew, package: tree }
+
+      - name: wget
+        instructions:
+          darwin: { manager: brew, package: wget }
+
+      - name: gnupg
+        instructions:
+          darwin: { manager: brew, package: gnupg }
+          fedora: { manager: dnf, package: gnupg2 }
+
+      - name: podman
+        instructions:
+          darwin: { manager: brew, package: podman }
+          fedora: { manager: dnf, package: podman }
+
+      - name: rclone
+        instructions:
+          darwin:
+            manager: brew
+            check: command -v rclone &> /dev/null
+            package: rclone
+          fedora: { manager: dnf, package: rclone }
+
+  - name: apps
+    description: "Editors, Shell, and Terminal"
+    steps:
+      - name: zsh
+        description: "Shell replacement"
+        instructions:
+          darwin:
+            manager: brew
+            check: command -v zsh &> /dev/null
+            package: zsh
+          fedora: { manager: dnf, package: zsh }
+
+      - name: oh-my-zsh
+        instructions:
+          fedora:
+            manager: shell
+            check: test -d ~/.oh-my-zsh
+            install: curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+          darwin:
+            manager: shell
+            check: test -d ~/.oh-my-zsh
+            install: curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+
+      - name: neovim
+        description: "Editor"
+        instructions:
+          darwin: { manager: brew, package: neovim }
+          fedora: { manager: dnf, package: neovim }
+
+      - name: lazygit
+        description: "git UI"
+        instructions:
+          darwin: { manager: brew, package: lazygit }
+
+      - name: starship
+        description: "Command Line Prompt"
+        instructions:
+          darwin: { manager: brew, package: starship }
+          fedora: { manager: cargo, package: starship }
+
+      - name: tmux
+        instructions:
+          darwin: { manager: brew, package: tmux }
+
+      - name: zsh-autosuggestions
+        description: "Fish-like autosuggestions for Zsh"
+        instructions:
+          darwin: { manager: brew, package: zsh-autosuggestions }
+          fedora: { manager: dnf, package: zsh-autosuggestions }
+
+      - name: zsh-syntax-highlighting
+        description: "Fish-like syntax highlighting for Zsh"
+        instructions:
+          darwin: { manager: brew, package: zsh-syntax-highlighting }
+          fedora: { manager: dnf, package: zsh-syntax-highlighting }
+
+      - name: ghostty
+        instructions:
+          darwin: { manager: brew, package: ghostty }
+          fedora:
+            manager: shell
+            check: "flatpak list | grep com.mitchellh.ghostty"
+            install: "echo 'Manual Ghostty install required on Fedora'"
+
+  - name: fonts
+    description: "Nerd Fonts"
+    steps:
+      - name: jetbrains-mono
+        instructions:
+          darwin: { manager: brew, package: font-jetbrains-mono-nerd-font }
+          fedora: { manager: font, font_name: JetBrainsMono }
