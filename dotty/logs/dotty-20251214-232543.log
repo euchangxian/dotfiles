@@ -1,2 +1,0 @@
-time=2025-12-14T23:25:43.384+08:00 level=INFO msg="starting dotty" os=darwin dry-run=false
-time=2025-12-14T23:25:50.199+08:00 level=INFO msg="All matched steps are already installed. Nothing to do."
