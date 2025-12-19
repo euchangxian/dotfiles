@@ -11,7 +11,10 @@ stages:
 
       - name: build-tools
         instructions:
-          fedora: { manager: dnf, package: "@development-tools" }
+          fedora: 
+            manager: dnf
+            check: "dnf group list --installed | grep 'development-tools'"
+            package: "@development-tools"
 
   - name: toolchains
     description: "Compilers and Interpreters (Rust, Go, Node, Python)"
@@ -57,14 +60,15 @@ stages:
         instructions:
           darwin: { manager: brew, package: bat }
           fedora: { manager: cargo, package: bat }
-        hooks:
-          after: ["bat cache --build"]
 
       - name: fd
         description: "find replacement"
         instructions:
           darwin: { manager: brew, package: fd }
-          fedora: { manager: cargo, package: fd }
+          fedora:
+            manager: cargo
+            check: "cargo install --list fd-find | grep 'fd-find'"
+            package: fd-find
 
       - name: eza
         description: "ls replacement"
@@ -148,14 +152,19 @@ stages:
             manager: brew
             check: command -v zsh &> /dev/null
             package: zsh
-          fedora: { manager: dnf, package: zsh }
+          fedora: 
+            manager: dnf
+            package: zsh
+            hooks:
+              after:
+                - "chsh -s $(which zsh)"
 
       - name: oh-my-zsh
         instructions:
           default:
             manager: shell
             check: test -d ~/.oh-my-zsh
-            install: curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+            install: "curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh -s -- --unattended"
 
       - name: neovim
         description: "Editor"
@@ -210,10 +219,10 @@ stages:
           darwin: { manager: brew, package: font-jetbrains-mono-nerd-font }
           fedora:
             manager: dnf
-            font_name: jetbrains-mono-nerd-font
+            package: jetbrains-mono-fonts
             hooks:
-              before:
-                - "sudo dnf copr enable -y maveonair/jetbrains-mono-nerd-font"
+              after:
+                - "fc-cache -f -v"
 
   - name: dotfiles
     description: "Symlink Configuration Files"
@@ -259,7 +268,7 @@ stages:
 
       - name: misc-configs
         instructions:
-          default:
+          darwin:
             manager: symlink
             links:
               - {
