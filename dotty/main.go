@@ -187,6 +187,7 @@ func main() {
 
 	if installErr != nil {
 		fmt.Printf("\nInstallation had errors: %v\nCheck log for details.\n", installErr)
+		fmt.Printf("%v\n", logFile.Name())
 		os.Exit(1)
 	}
 

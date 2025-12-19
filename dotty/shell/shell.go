@@ -37,7 +37,7 @@ func New(dryRun bool, writer io.Writer) *Executor {
 	}
 
 	return &Executor{
-		DryRun:  false,
+		DryRun:  dryRun,
 		BaseEnv: baseEnv,
 		Writer:  writer,
 	}
@@ -47,7 +47,7 @@ func New(dryRun bool, writer io.Writer) *Executor {
 // envPath is the "Sandboxed PATH" we are maintaining.
 func (e *Executor) Run(name string, args []string, envPath string) error {
 	if e.DryRun {
-		logCmd(name, args)
+		return e.logCmd(name, args)
 	}
 
 	cmd := exec.Command(name, args...)
@@ -63,8 +63,7 @@ func (e *Executor) Run(name string, args []string, envPath string) error {
 // Output runs silently and captures stdout (for Check operations)
 func (e *Executor) Output(name string, args []string, envPath string) (string, error) {
 	if e.DryRun {
-		logCmd(name, args)
-		return "", fmt.Errorf("dry-run: check simulated fail")
+		return "", e.logCmd(name, args)
 	}
 
 	cmd := exec.Command(name, args...)
@@ -81,12 +80,16 @@ func (e *Executor) injectEnv(cmd *exec.Cmd, envPath string) {
 	copy(finalEnv, e.BaseEnv)
 
 	if envPath != "" {
-		finalEnv = append(finalEnv, envPath)
+		finalEnv = append(finalEnv, fmt.Sprintf("PATH=%s", envPath))
 	}
 	cmd.Env = finalEnv
 }
 
-func logCmd(name string, args []string) {
+func (e *Executor) logCmd(name string, args []string) error {
 	cmdStr := fmt.Sprintf("%s %s", name, strings.Join(args, " "))
-	fmt.Printf("\x1b[36m[CMD]\x1b[0m %s\n", cmdStr)
+	_, err := fmt.Fprintf(e.Writer, "\x1b[36m[CMD]\x1b[0m %s\n", cmdStr)
+	if err != nil {
+		return err
+	}
+	return nil
 }
