@@ -11,7 +11,7 @@ stages:
 
       - name: build-tools
         instructions:
-          fedora: 
+          fedora:
             manager: dnf
             check: "dnf group list --installed | grep 'development-tools'"
             package: "@development-tools"
@@ -152,7 +152,7 @@ stages:
             manager: brew
             check: command -v zsh &> /dev/null
             package: zsh
-          fedora: 
+          fedora:
             manager: dnf
             package: zsh
             hooks:
@@ -265,6 +265,9 @@ stages:
                   target: "~/.config/shell-color-scripts",
                 }
               - { source: "lazygit", target: "~/.config/lazygit" }
+            hooks:
+              after:
+                - "bat cache --build"
 
       - name: misc-configs
         instructions:
