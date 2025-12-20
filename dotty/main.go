@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"dotty/engine"
@@ -40,6 +42,49 @@ func setupLogging() (*os.File, error) {
 	slog.SetDefault(slog.New(handler))
 
 	return f, nil
+}
+
+func ensureSudo(steps []engine.PlannedStep) {
+	needsSudo := false
+	for _, step := range steps {
+		// Managers that inherently use sudo
+		if step.Instruction.Manager == manifest.ManagerDNF {
+			needsSudo = true
+			break
+		}
+
+		// Check explicit commands (Shell manager or Hooks)
+		if strings.Contains(step.Instruction.InstallCmd, "sudo") {
+			needsSudo = true
+			break
+		}
+
+		for _, h := range step.Instruction.Hooks.Before {
+			if strings.Contains(h, "sudo") {
+				needsSudo = true
+				break
+			}
+		}
+		for _, h := range step.Instruction.Hooks.After {
+			if strings.Contains(h, "sudo") {
+				needsSudo = true
+				break
+			}
+		}
+	}
+
+	if needsSudo {
+		fmt.Println("Some steps require root access. Checking permissions...")
+		cmd := exec.Command("sudo", "-v")
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			fmt.Println("Sudo authentication failed. Exiting.")
+			os.Exit(1)
+		}
+		fmt.Println("Permissions granted.")
+	}
 }
 
 func main() {
@@ -170,6 +215,8 @@ func main() {
 		fmt.Println("Dry-run complete. No changes made.")
 		return
 	}
+
+	ensureSudo(stepsToExecute)
 
 	fmt.Println("Installing packages...")
 	installChan := make(chan engine.ProgressMsg)

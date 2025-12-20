@@ -52,6 +52,11 @@ stages:
           darwin: { manager: brew, package: uv }
           fedora: { manager: dnf, package: uv }
 
+      - name: clang
+        env_update: true
+        instructions:
+          fedora: { manager: dnf, package: clang }
+
   - name: core
     description: "Modern Unix Utilities"
     steps:
