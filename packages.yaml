@@ -274,14 +274,12 @@ stages:
                   source: "pokemon-colorscripts",
                   target: "~/.config/pokemon-colorscripts",
                 }
-              - {
-                  source: "shell-color-scripts",
-                  target: "~/.config/shell-color-scripts",
-                }
               - { source: "lazygit", target: "~/.config/lazygit" }
             hooks:
               after:
                 - "bat cache --build"
+                - |
+                  sudo ./pokemon-colorscripts/install.sh
 
       - name: misc-configs
         instructions:
