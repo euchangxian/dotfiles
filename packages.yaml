@@ -188,6 +188,12 @@ stages:
           darwin: { manager: brew, package: starship }
           fedora: { manager: cargo, package: starship }
 
+      - name: dprint
+        description: "Code formatter (used for LeetCode README)"
+        instructions:
+          darwin: { manager: brew, package: dprint }
+          fedora: { manager: cargo, package: dprint }
+
       - name: tmux
         instructions:
           darwin: { manager: brew, package: tmux }
