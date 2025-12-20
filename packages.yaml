@@ -244,13 +244,16 @@ stages:
             manager: symlink
             links:
               - { source: "zsh/.zshrc", target: "~/.zshrc" }
-              - { source: "zsh/.zprofile", target: "~/.zprofile" }
               - { source: "git/.gitconfig", target: "~/.gitconfig" }
               - {
                   source: "git/.gitignore_global",
                   target: "~/.gitignore_global",
                 }
               - { source: "tmux/.tmux.conf", target: "~/.tmux.conf" }
+          darwin:
+            manager: symlink
+            links:
+              - { source: "zsh/.zprofile", target: "~/.zprofile" }
 
       - name: xdg-configs
         instructions:
