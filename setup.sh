@@ -81,16 +81,26 @@ DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/${BINARY_N
 info "Bootstrapping Dotty for ${OS}/${ARCH}..."
 info "Downloading from: ${DOWNLOAD_URL}"
 
+TARGET_FILE="${BIN_DIR}/dotty"
+
 if command -v curl >/dev/null 2>&1; then
-  run_cmd curl -L -o "${BIN_DIR}/dotty" "$DOWNLOAD_URL"
+  # -z: Only download if remote is newer than local $TARGET_FILE
+  # -f: Fail silently (server errors)
+  # -s: Silent (no progress bar)
+  # -S: Show error if it fails
+  # -L: Follow redirects
+  run_cmd curl -fsSL -z "${TARGET_FILE}" -o "${TARGET_FILE}" "${DOWNLOAD_URL}"
 elif command -v wget >/dev/null 2>&1; then
-  run_cmd wget -O "${BIN_DIR}/dotty" "$DOWNLOAD_URL"
+  # -q: Quiet (no output)
+  # -N: Turn on timestamping (skip if remote is not newer)
+  # -O: Output file
+  run_cmd wget -qN -O "${TARGET_FILE}" "${DOWNLOAD_URL}"
 else
   error "Neither curl nor wget found."
 fi
 
-chmod +x "${BIN_DIR}/dotty"
+chmod +x "${TARGET_FILE}"
 
-pushd "$BIN_DIR" >/dev/null 2>&1
+pushd "${BIN_DIR}" >/dev/null 2>&1
 ./dotty "$@"
 popd >/dev/null 2>&1
