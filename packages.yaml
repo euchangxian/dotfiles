@@ -17,7 +17,7 @@ stages:
             package: "@development-tools"
 
   - name: toolchains
-    description: "Compilers and Interpreters (Rust, Go, Node, Python)"
+    description: "Compilers and Interpreters"
     steps:
       - name: rust
         env_update: true
@@ -278,8 +278,7 @@ stages:
             hooks:
               after:
                 - "bat cache --build"
-                - |
-                  sudo ./pokemon-colorscripts/install.sh
+                - "sudo ./pokemon-colorscripts/install.sh"
 
       - name: misc-configs
         instructions:
