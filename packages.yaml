@@ -52,6 +52,11 @@ stages:
           darwin: { manager: brew, package: uv }
           fedora: { manager: dnf, package: uv }
 
+      - name: perl
+        description: "Required dependency for Zellij"
+        instructions:
+          fedora: { manager: dnf, package: perl }
+
       - name: clang
         env_update: true
         instructions:
@@ -105,6 +110,12 @@ stages:
           darwin: { manager: brew, package: zoxide }
           fedora: { manager: dnf, package: zoxide }
 
+      - name: zellij
+        description: "Modern tmux"
+        instructions:
+          darwin: { manager: brew, package: zellij }
+          fedora: { manager: cargo, package: zellij }
+
       - name: git-delta
         description: "Syntax-Highlighting Pager for git"
         instructions:
@@ -122,7 +133,7 @@ stages:
         instructions:
           darwin: { manager: brew, package: bottom }
           fedora: { manager: cargo, package: bottom }
-          
+
       - name: jq
         description: "Command-line JSON processor"
         instructions:
@@ -234,7 +245,7 @@ stages:
             hooks:
               before:
                 - "sudo dnf copr enable -y scottames/ghostty"
-      
+
       - name: jetbrains-mono
         description: "Font"
         instructions:
@@ -277,6 +288,7 @@ stages:
                   target: "~/.config/starship.toml",
                 }
               - { source: "nvim", target: "~/.config/nvim" }
+              - { source: "zellij", target: "~/.config/zellij" }
               - { source: "fzf-git.sh", target: "~/.config/fzf-git.sh" }
               - { source: "fzf-tab", target: "~/.config/fzf-tab" }
               - { source: "bat", target: "~/.config/bat" }
