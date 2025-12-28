@@ -98,7 +98,7 @@ func (m *Cargo) Exists(ctx engine.Context, instruction manifest.Instruction) boo
 }
 
 func (m *Cargo) getInstallArgs(instruction manifest.Instruction) (string, []string) {
-	return "cargo", []string{"install", instruction.Package}
+	return "cargo", []string{"install", "--locked", instruction.Package}
 }
 
 func (m *Cargo) GetCommand(ctx engine.Context, instruction manifest.Instruction) string {
