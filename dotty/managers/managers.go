@@ -20,7 +20,7 @@ func (m *Shell) Exists(ctx engine.Context, instruction manifest.Instruction) boo
 
 	// use "sh -c" to allow piping and complex commands in the YAML check string
 	// e.g. "dnf repolist | grep rpmfusion"
-	err := ctx.Shell.Run("sh", []string{"-c", instruction.CheckCmd}, ctx.PATH)
+	_, err := ctx.Shell.Output("sh", []string{"-c", instruction.CheckCmd}, ctx.PATH)
 	return err == nil
 }
 
@@ -35,12 +35,12 @@ func (m *Shell) GetCommand(ctx engine.Context, instruction manifest.Instruction)
 	return fmt.Sprintf("%s %s", name, strings.Join(args, " "))
 }
 
-func (m *Shell) Install(ctx engine.Context, instruction manifest.Instruction) error {
+func (m *Shell) Install(ctx engine.Context, instruction manifest.Instruction, onLine func(string)) error {
 	if instruction.InstallCmd == "" {
 		return errors.New("shell manager requires an 'install' command")
 	}
 	name, args := m.getInstallArgs(instruction)
-	return ctx.Shell.Run(name, args, ctx.PATH)
+	return ctx.Shell.Run(name, args, ctx.PATH, onLine)
 }
 
 type Dnf struct{}
@@ -59,9 +59,9 @@ func (m *Dnf) GetCommand(ctx engine.Context, instruction manifest.Instruction) s
 	return fmt.Sprintf("%s %s", name, strings.Join(args, " "))
 }
 
-func (m *Dnf) Install(ctx engine.Context, instruction manifest.Instruction) error {
+func (m *Dnf) Install(ctx engine.Context, instruction manifest.Instruction, onLine func(string)) error {
 	name, args := m.getInstallArgs(instruction)
-	return ctx.Shell.Run(name, args, ctx.PATH)
+	return ctx.Shell.Run(name, args, ctx.PATH, onLine)
 }
 
 type Homebrew struct{}
@@ -81,9 +81,9 @@ func (m *Homebrew) GetCommand(ctx engine.Context, instruction manifest.Instructi
 	return fmt.Sprintf("%s %s", name, strings.Join(args, " "))
 }
 
-func (m *Homebrew) Install(ctx engine.Context, instruction manifest.Instruction) error {
+func (m *Homebrew) Install(ctx engine.Context, instruction manifest.Instruction, onLine func(string)) error {
 	name, args := m.getInstallArgs(instruction)
-	return ctx.Shell.Run(name, args, ctx.PATH)
+	return ctx.Shell.Run(name, args, ctx.PATH, onLine)
 }
 
 type Cargo struct{}
@@ -106,7 +106,7 @@ func (m *Cargo) GetCommand(ctx engine.Context, instruction manifest.Instruction)
 	return fmt.Sprintf("%s %s", name, strings.Join(args, " "))
 }
 
-func (m *Cargo) Install(ctx engine.Context, instruction manifest.Instruction) error {
+func (m *Cargo) Install(ctx engine.Context, instruction manifest.Instruction, onLine func(string)) error {
 	name, args := m.getInstallArgs(instruction)
-	return ctx.Shell.Run(name, args, ctx.PATH)
+	return ctx.Shell.Run(name, args, ctx.PATH, onLine)
 }

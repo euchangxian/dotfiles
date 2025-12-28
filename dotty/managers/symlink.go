@@ -93,7 +93,7 @@ func (m *Symlink) GetCommand(ctx engine.Context, instruction manifest.Instructio
 	return fmt.Sprintf("ln -sf [%s] (%d files)", strings.Join(names, ", "), len(instruction.Links))
 }
 
-func (m *Symlink) Install(ctx engine.Context, instruction manifest.Instruction) error {
+func (m *Symlink) Install(ctx engine.Context, instruction manifest.Instruction, onLine func(string)) error {
 	for _, link := range instruction.Links {
 		absSource, absTarget, err := m.resolve(link.Source, link.Target)
 		if err != nil {

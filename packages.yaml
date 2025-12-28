@@ -87,6 +87,12 @@ stages:
           darwin: { manager: brew, package: ripgrep }
           fedora: { manager: cargo, package: ripgrep }
 
+      - name: ripgrep-all
+        description: "rg wrapper to search in pdf, docx, sqlite, ..."
+        instructions:
+          darwin: { manager: brew, package: rga }
+          fedora: { manager: cargo, package: ripgrep_all }
+
       - name: fzf
         description: "Fuzzy Finder"
         instructions:
@@ -111,6 +117,12 @@ stages:
           darwin: { manager: brew, package: tealdeer }
           fedora: { manager: dnf, package: tealdeer }
 
+      - name: bottom
+        description: "Process/System Monitor"
+        instructions:
+          darwin: { manager: brew, package: bottom }
+          fedora: { manager: cargo, package: bottom }
+          
       - name: jq
         description: "Command-line JSON processor"
         instructions:
@@ -160,9 +172,11 @@ stages:
           fedora:
             manager: dnf
             package: zsh
-            hooks:
-              after:
-                - "chsh -s $(which zsh)"
+          hooks:
+            after:
+              - |
+                echo '[NOTE] changing default shell to zsh. May require reboot'
+                chsh -s $(which zsh)
 
       - name: oh-my-zsh
         instructions:
@@ -211,6 +225,7 @@ stages:
           fedora: { manager: dnf, package: zsh-syntax-highlighting }
 
       - name: ghostty
+        description: "Terminal Emulator"
         instructions:
           darwin: { manager: brew, package: ghostty }
           fedora:
@@ -219,13 +234,9 @@ stages:
             hooks:
               before:
                 - "sudo dnf copr enable -y scottames/ghostty"
-
-        hooks:
-
-  - name: fonts
-    description: "Nerd Fonts"
-    steps:
+      
       - name: jetbrains-mono
+        description: "Font"
         instructions:
           darwin: { manager: brew, package: font-jetbrains-mono-nerd-font }
           fedora:

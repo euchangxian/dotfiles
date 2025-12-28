@@ -24,7 +24,6 @@ import (
 const PackagesPath = "../packages.yaml"
 
 func setupLogging() (*os.File, error) {
-	// Create logs directory
 	if err := os.MkdirAll("logs", 0o755); err != nil {
 		return nil, err
 	}
@@ -178,15 +177,39 @@ func main() {
 	if *yes {
 		stepsToExecute = plannedSteps
 	} else {
-		// Prepare options for huh
 		options := make([]huh.Option[engine.PlannedStep], len(plannedSteps))
 		for i, step := range plannedSteps {
-			// Label format: "StepName (Actual Command)"
-			label := fmt.Sprintf("%-20s  \x1b[2m%s\x1b[0m", step.Name, step.Command)
+			hookParts := []string{}
+			if len(step.Instruction.Hooks.Before) > 0 {
+				hookParts = append(hookParts, "+pre")
+			}
+			if len(step.Instruction.Hooks.After) > 0 {
+				hookParts = append(hookParts, "+post")
+			}
+
+			hookTip := ""
+			if len(hookParts) > 0 {
+				// yellow/amber
+				hookTip = fmt.Sprintf(" \x1b[33m[%s]\x1b[0m", strings.Join(hookParts, "/"))
+			}
+
+			// truncate if command is too long for brevity
+			displayCmd := step.Command
+			if len(displayCmd) > 40 {
+				displayCmd = displayCmd[:37] + "..."
+			}
+
+			label := fmt.Sprintf(
+				"\x1b[2m[%s]\x1b[0m %-15s%s \x1b[2;37m| %s\x1b[0m",
+				strings.ToUpper(step.StageName),
+				step.Name,
+				hookTip,
+				displayCmd,
+			)
+
 			options[i] = huh.NewOption(label, step).Selected(true)
 		}
 
-		// Use huh for the checklist
 		form := huh.NewForm(
 			huh.NewGroup(
 				huh.NewMultiSelect[engine.PlannedStep]().
@@ -220,23 +243,32 @@ func main() {
 
 	fmt.Println("Installing packages...")
 	installChan := make(chan engine.ProgressMsg)
-	var installErr error
-
+	installModel := ui.InitialModel(ui.ModeInstalling, installChan, len(stepsToExecute))
 	go func() {
-		installErr = dotty.Execute(stepsToExecute, installChan)
+		// UI model will capture the error from the channel
+		_ = dotty.Execute(stepsToExecute, installChan)
 	}()
-
-	installModel := ui.InitialModel(ui.Installing, installChan, len(stepsToExecute))
-	if _, err := tea.NewProgram(installModel).Run(); err != nil {
+	m, err := tea.NewProgram(installModel).Run()
+	if err != nil {
 		fmt.Println("Error running UI:", err)
 		os.Exit(1)
 	}
 
-	if installErr != nil {
-		fmt.Printf("\nInstallation had errors: %v\nCheck log for details.\n", installErr)
-		fmt.Printf("%v\n", logFile.Name())
-		os.Exit(1)
+	finalModel := m.(ui.Model)
+	hasError := false
+	fmt.Println("\n" + ui.ItemStyle.Render("Installation Summary:"))
+	for _, res := range finalModel.Results {
+		if res.Error == nil {
+			fmt.Printf("  \x1b[32m✓\x1b[0m %-15s\n", res.Name)
+		} else {
+			hasError = true
+			fmt.Printf("  \x1b[31m✖\x1b[0m %-15s %s\n", res.Name, ui.SubtleStyle.Render(res.Error.Error()))
+		}
 	}
 
-	fmt.Println("\nDone! System is ready.")
+	if hasError {
+		fmt.Println(ui.ErrStyle.Render("\n ✖ Installation encountered errors:"))
+	} else {
+		fmt.Println(ui.StatusStyle.Render("\n ✔ System configuration complete!"))
+	}
 }

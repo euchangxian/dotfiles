@@ -15,10 +15,10 @@ import (
 type Status = string
 
 const (
-	Checking   Status = "Checking"
-	Installing Status = "Installing"
-	Done       Status = "Done"
-	Failed     Status = "Failed"
+	StatusChecking   Status = "Checking"
+	StatusInstalling Status = "Installing"
+	StatusDone       Status = "Done"
+	StatusFailed     Status = "Failed"
 )
 
 type Context struct {
@@ -30,7 +30,7 @@ type Context struct {
 
 // Shell defines what the Engine/Managers require from the OS.
 type Shell interface {
-	Run(name string, args []string, envPath string) error
+	Run(name string, args []string, envPath string, onLine func(string)) error
 	Output(name string, args []string, envPath string) (string, error)
 }
 
@@ -42,7 +42,7 @@ type Manager interface {
 	GetCommand(ctx Context, instruction manifest.Instruction) string
 
 	// Install executes the install instruction necessary
-	Install(ctx Context, instruction manifest.Instruction) error
+	Install(ctx Context, instruction manifest.Instruction, onLine func(string)) error
 }
 
 type Engine struct {
@@ -51,8 +51,9 @@ type Engine struct {
 }
 
 type PlannedStep struct {
-	Name    string
-	Command string
+	StageName string
+	Name      string
+	Command   string
 
 	// Instruction must be a pointer to be comparable (slices in structs are not comparable).
 	// This is required for UI libraries like 'huh' that track selection by equality.
@@ -60,12 +61,18 @@ type PlannedStep struct {
 }
 
 type ProgressMsg struct {
+	Stage   string
 	Name    string
 	Status  Status
 	Details string
-	Done    bool
+	Found   bool
 	Total   int
 	Current int
+	Error   error
+}
+
+func (m *ProgressMsg) Done() bool {
+	return m.Status == StatusDone || m.Status == StatusFailed
 }
 
 func New(shell Shell, targetOS manifest.OSName, managers map[manifest.ManagerName]Manager) Engine {
@@ -86,9 +93,10 @@ func New(shell Shell, targetOS manifest.OSName, managers map[manifest.ManagerNam
 // Plan concurrently checks all steps.
 func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]PlannedStep, error) {
 	type workItem struct {
-		Index    int
-		StepName string
-		Instr    manifest.Instruction
+		Index     int
+		StageName string
+		StepName  string
+		Instr     manifest.Instruction
 	}
 	var work []workItem
 	globalIndex := 0
@@ -106,9 +114,10 @@ func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]Plann
 			}
 
 			work = append(work, workItem{
-				Index:    globalIndex,
-				StepName: step.Name,
-				Instr:    instr,
+				Index:     globalIndex,
+				StageName: stage.Name,
+				StepName:  step.Name,
+				Instr:     instr,
 			})
 			globalIndex++
 		}
@@ -127,12 +136,12 @@ func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]Plann
 	for range numWorkers {
 		wg.Go(func() {
 			for item := range jobs {
-				progress <- ProgressMsg{Name: item.StepName, Status: "Checking", Details: item.Instr.Manager}
+				progress <- ProgressMsg{Stage: item.StageName, Name: item.StepName, Status: StatusChecking, Details: item.Instr.Manager}
 
 				exists, err := e.checkExistence(item.Instr)
 				if err != nil {
 					errChan <- fmt.Errorf("step '%s' check failed: %w", item.StepName, err)
-					progress <- ProgressMsg{Name: item.StepName, Done: true}
+					progress <- ProgressMsg{Name: item.StepName, Status: StatusDone}
 					continue
 				}
 
@@ -146,13 +155,14 @@ func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]Plann
 						instCopy := item.Instr
 
 						results[item.Index] = &PlannedStep{
+							StageName:   item.StageName,
 							Name:        item.StepName,
 							Command:     cmd,
 							Instruction: &instCopy,
 						}
 					}
 				}
-				progress <- ProgressMsg{Name: item.StepName, Done: true}
+				progress <- ProgressMsg{Stage: item.StageName, Name: item.StepName, Status: StatusDone, Found: exists}
 			}
 		})
 	}
@@ -208,9 +218,20 @@ func (e *Engine) checkExistence(instr manifest.Instruction) (bool, error) {
 func (e *Engine) Execute(steps []PlannedStep, progress chan<- ProgressMsg) error {
 	defer close(progress)
 
+	total := len(steps)
 	for i, step := range steps {
 		instruction := *step.Instruction
 		manager := e.Managers[instruction.Manager]
+
+		notify := func(line string) {
+			progress <- ProgressMsg{
+				Name:    step.Name,
+				Status:  StatusInstalling,
+				Details: line,
+				Current: i + 1,
+				Total:   total,
+			}
+		}
 
 		if len(instruction.Hooks.Before) > 0 {
 			progress <- ProgressMsg{
@@ -218,12 +239,12 @@ func (e *Engine) Execute(steps []PlannedStep, progress chan<- ProgressMsg) error
 				Status:  "Running Pre-hooks",
 				Details: "Setting up dependencies...",
 				Current: i + 1,
-				Total:   len(steps),
+				Total:   total,
 			}
 
 			for _, cmd := range instruction.Hooks.Before {
 				// Use the shell to run the hook
-				if err := e.Ctx.Shell.Run("sh", []string{"-c", cmd}, e.Ctx.PATH); err != nil {
+				if err := e.Ctx.Shell.Run("sh", []string{"-c", cmd}, e.Ctx.PATH, notify); err != nil {
 					return fmt.Errorf("step '%s' pre-hook failed: %w", step.Name, err)
 				}
 			}
@@ -231,24 +252,38 @@ func (e *Engine) Execute(steps []PlannedStep, progress chan<- ProgressMsg) error
 
 		progress <- ProgressMsg{
 			Name:    step.Name,
-			Status:  "Installing",
+			Status:  StatusInstalling,
 			Details: instruction.Manager,
 			Current: i + 1,
-			Total:   len(steps),
+			Total:   total,
 		}
 
-		if err := manager.Install(e.Ctx, instruction); err != nil {
+		if err := manager.Install(e.Ctx, instruction, notify); err != nil {
 			slog.Error("install failed", "step", step.Name, "error", err)
+			progress <- ProgressMsg{
+				Name:    step.Name,
+				Status:  StatusFailed,
+				Error:   err,
+				Current: i + 1,
+				Total:   total,
+			}
 			return fmt.Errorf("step '%s' failed: %w", step.Name, err)
 		}
 
 		if len(instruction.Hooks.After) > 0 {
 			progress <- ProgressMsg{Name: step.Name, Status: "Running Hooks"}
 			for _, cmd := range instruction.Hooks.After {
-				if err := e.Ctx.Shell.Run("sh", []string{"-c", cmd}, e.Ctx.PATH); err != nil {
+				if err := e.Ctx.Shell.Run("sh", []string{"-c", cmd}, e.Ctx.PATH, notify); err != nil {
 					return fmt.Errorf("step '%s' hook failed: %w", step.Name, err)
 				}
 			}
+		}
+
+		progress <- ProgressMsg{
+			Name:    step.Name,
+			Status:  StatusDone,
+			Current: i + 1,
+			Total:   len(steps),
 		}
 	}
 	return nil
