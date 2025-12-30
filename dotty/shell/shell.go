@@ -3,6 +3,7 @@ package shell
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -47,12 +48,12 @@ func New(dryRun bool, writer io.Writer) *Executor {
 
 // Run executes a command interactively (stdin/stdout connected to terminal)
 // envPath is the "Sandboxed PATH" we are maintaining.
-func (e *Executor) Run(name string, args []string, envPath string, onLine func(string)) error {
+func (e *Executor) Run(ctx context.Context, name string, args []string, envPath string, onLine func(string)) error {
 	if e.DryRun {
 		return e.logCmd(name, args)
 	}
 
-	cmd := exec.Command(name, args...)
+	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Stdin = os.Stdin
 
 	pr, pw := io.Pipe()
@@ -77,12 +78,12 @@ func (e *Executor) Run(name string, args []string, envPath string, onLine func(s
 }
 
 // Output runs silently and captures stdout (for Check operations)
-func (e *Executor) Output(name string, args []string, envPath string) (string, error) {
+func (e *Executor) Output(ctx context.Context, name string, args []string, envPath string) (string, error) {
 	if e.DryRun {
 		return "", e.logCmd(name, args)
 	}
 
-	cmd := exec.Command(name, args...)
+	cmd := exec.CommandContext(ctx, name, args...)
 	e.injectEnv(cmd, envPath)
 
 	out, err := cmd.Output()

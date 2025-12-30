@@ -1,17 +1,18 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
-	"path/filepath"
+	"os/signal"
 	"runtime"
 	"strings"
-	"time"
 
 	"dotty/engine"
+	"dotty/internal/logger"
 	"dotty/managers"
 	"dotty/manifest"
 	"dotty/shell"
@@ -23,36 +24,24 @@ import (
 
 const PackagesPath = "../packages.yaml"
 
-func setupLogging() (*os.File, error) {
-	if err := os.MkdirAll("logs", 0o755); err != nil {
-		return nil, err
-	}
-
-	// Unique log name: logs/dotty-20250101-120000.log
-	filename := filepath.Join("logs", fmt.Sprintf("dotty-%s.log", time.Now().Format("20060102-150405")))
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		return nil, err
-	}
-
-	handler := slog.NewTextHandler(f, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	})
-	slog.SetDefault(slog.New(handler))
-
-	return f, nil
+func init() {
+	managers.Register(manifest.ManagerShell, managers.NewShell())
+	managers.Register(manifest.ManagerDNF, managers.NewDnf())
+	managers.Register(manifest.ManagerBrew, managers.NewHomebrew())
+	managers.Register(manifest.ManagerCargo, managers.NewCargo())
+	managers.Register(manifest.ManagerSymlink, &managers.Symlink{})
 }
 
-func ensureSudo(steps []engine.PlannedStep) {
+func ensureSudo(steps []engine.PlannedStep, managers map[manifest.ManagerName]engine.Manager) {
 	needsSudo := false
 	for _, step := range steps {
-		// Managers that inherently use sudo
-		if step.Instruction.Manager == manifest.ManagerDNF {
+		mgr, ok := managers[step.Instruction.Manager]
+		if ok && mgr.RequiresPrivilege(*step.Instruction) {
 			needsSudo = true
 			break
 		}
 
-		// Check explicit commands (Shell manager or Hooks)
+		// Custom shell commands
 		if strings.Contains(step.Instruction.InstallCmd, "sudo") {
 			needsSudo = true
 			break
@@ -87,11 +76,14 @@ func ensureSudo(steps []engine.PlannedStep) {
 }
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
 	dryRun := flag.Bool("dry-run", false, "Preview commands without executing")
 	yes := flag.Bool("y", false, "Skip confirmation and run all steps")
 	flag.Parse()
 
-	logFile, err := setupLogging()
+	logFile, err := logger.Setup()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to setup logging: %v\n", err)
 		os.Exit(1)
@@ -124,16 +116,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	managers := map[string]engine.Manager{
-		manifest.ManagerShell:   &managers.Shell{},
-		manifest.ManagerDNF:     &managers.Dnf{},
-		manifest.ManagerBrew:    &managers.Homebrew{},
-		manifest.ManagerCargo:   &managers.Cargo{},
-		manifest.ManagerSymlink: &managers.Symlink{},
-	}
-
 	sh := shell.New(*dryRun, logFile)
-	dotty := engine.New(sh, targetOS, managers)
+	dotty := engine.New(sh, targetOS, managers.GetRegistry(), *dryRun)
 
 	// Calculate total tasks for progress bar
 	totalChecks := 0
@@ -151,7 +135,8 @@ func main() {
 	var plannedSteps []engine.PlannedStep
 	var planErr error
 	go func() {
-		plannedSteps, planErr = dotty.Plan(packages, planChan)
+		defer close(planChan)
+		plannedSteps, planErr = dotty.Plan(ctx, packages, planChan)
 	}()
 
 	fmt.Println("Analyzing system state...")
@@ -163,8 +148,7 @@ func main() {
 	}
 
 	if planErr != nil {
-		slog.Error("planning error", "error", err)
-		fmt.Printf("Planning failed: %v\n", planErr)
+		fmt.Printf("Planning failed: %v\n", planErr) // Correct variable here
 		os.Exit(1)
 	}
 
@@ -239,14 +223,14 @@ func main() {
 		return
 	}
 
-	ensureSudo(stepsToExecute)
+	ensureSudo(stepsToExecute, managers.GetRegistry())
 
 	fmt.Println("Installing packages...")
 	installChan := make(chan engine.ProgressMsg)
 	installModel := ui.InitialModel(ui.ModeInstalling, installChan, len(stepsToExecute))
 	go func() {
-		// UI model will capture the error from the channel
-		_ = dotty.Execute(stepsToExecute, installChan)
+		defer close(installChan)
+		_ = dotty.Execute(ctx, stepsToExecute, installChan)
 	}()
 	m, err := tea.NewProgram(installModel).Run()
 	if err != nil {

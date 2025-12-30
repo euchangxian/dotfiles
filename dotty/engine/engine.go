@@ -2,14 +2,16 @@
 package engine
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
-	"sync"
 
+	"dotty/filesystem"
 	"dotty/manifest"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type Status = string
@@ -21,32 +23,46 @@ const (
 	StatusFailed     Status = "Failed"
 )
 
-type Context struct {
-	OS     manifest.OSName
-	Shell  Shell
-	PATH   string
-	DryRun bool
+type FileSystem interface {
+	Symlink(oldname, newname string) error
+	Remove(name string) error
+	MkdirAll(path string, perm os.FileMode) error
+	Lstat(name string) (os.FileInfo, error)
+	Readlink(name string) (string, error)
+	UserHomeDir() (string, error)
+	Getwd() (string, error)
 }
 
 // Shell defines what the Engine/Managers require from the OS.
 type Shell interface {
-	Run(name string, args []string, envPath string, onLine func(string)) error
-	Output(name string, args []string, envPath string) (string, error)
+	Run(ctx context.Context, name string, args []string, envPath string, onLine func(string)) error
+	Output(ctx context.Context, name string, args []string, envPath string) (string, error)
+}
+
+type Env struct {
+	OS     manifest.OSName
+	Shell  Shell
+	FS     FileSystem
+	PATH   string
+	DryRun bool
 }
 
 type Manager interface {
 	// Exists checks if the package is already on the system
-	Exists(ctx Context, instruction manifest.Instruction) bool
+	Exists(ctx context.Context, env Env, instruction manifest.Instruction) bool
 
 	// GetCommand returns the shell command string that would be executed
-	GetCommand(ctx Context, instruction manifest.Instruction) string
+	GetCommand(env Env, instruction manifest.Instruction) string
 
 	// Install executes the install instruction necessary
-	Install(ctx Context, instruction manifest.Instruction, onLine func(string)) error
+	Install(ctx context.Context, env Env, instruction manifest.Instruction, onLine func(string)) error
+
+	// RequiresPrivilege returns true if the manager or specific instruction needs root access.
+	RequiresPrivilege(instruction manifest.Instruction) bool
 }
 
 type Engine struct {
-	Ctx      Context
+	Env      Env
 	Managers map[manifest.ManagerName]Manager
 }
 
@@ -75,23 +91,30 @@ func (m *ProgressMsg) Done() bool {
 	return m.Status == StatusDone || m.Status == StatusFailed
 }
 
-func New(shell Shell, targetOS manifest.OSName, managers map[manifest.ManagerName]Manager) Engine {
+func New(shell Shell, targetOS manifest.OSName, managers map[manifest.ManagerName]Manager, dryRun bool) Engine {
 	initialPATH := os.Getenv("PATH")
 
-	ctx := Context{
-		Shell: shell,
-		OS:    targetOS,
-		PATH:  initialPATH,
+	var fs FileSystem = filesystem.Real{}
+	if dryRun {
+		fs = filesystem.DryRun{}
+	}
+
+	env := Env{
+		Shell:  shell,
+		OS:     targetOS,
+		FS:     fs,
+		PATH:   initialPATH,
+		DryRun: dryRun,
 	}
 
 	return Engine{
-		Ctx:      ctx,
+		Env:      env,
 		Managers: managers,
 	}
 }
 
 // Plan concurrently checks all steps.
-func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]PlannedStep, error) {
+func (e *Engine) Plan(ctx context.Context, m manifest.Manifest, progress chan<- ProgressMsg) ([]PlannedStep, error) {
 	type workItem struct {
 		Index     int
 		StageName string
@@ -102,7 +125,7 @@ func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]Plann
 	globalIndex := 0
 	for _, stage := range m.Stages {
 		for _, step := range stage.Steps {
-			instr, ok := step.Instructions[e.Ctx.OS]
+			instr, ok := step.Instructions[e.Env.OS]
 
 			// check default
 			if !ok {
@@ -124,46 +147,48 @@ func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]Plann
 	}
 
 	totalChecks := len(work)
-
-	// use pointers so we can check if a slot was filled (nil = installed).
 	results := make([]*PlannedStep, totalChecks)
-
 	jobs := make(chan workItem, totalChecks)
-	errChan := make(chan error, totalChecks)
-	var wg sync.WaitGroup
+	g, gCtx := errgroup.WithContext(ctx)
 
 	numWorkers := 5
 	for range numWorkers {
-		wg.Go(func() {
+		g.Go(func() error {
 			for item := range jobs {
-				progress <- ProgressMsg{Stage: item.StageName, Name: item.StepName, Status: StatusChecking, Details: item.Instr.Manager}
+				if gCtx.Err() != nil {
+					return gCtx.Err()
+				}
+				progress <- ProgressMsg{
+					Stage:   item.StageName,
+					Name:    item.StepName,
+					Status:  StatusChecking,
+					Details: item.Instr.Manager,
+				}
 
-				exists, err := e.checkExistence(item.Instr)
+				exists, err := e.checkExistence(gCtx, item.Instr)
 				if err != nil {
-					errChan <- fmt.Errorf("step '%s' check failed: %w", item.StepName, err)
-					progress <- ProgressMsg{Name: item.StepName, Status: StatusDone}
-					continue
+					return err
 				}
 
 				if !exists {
-					mgr, ok := e.Managers[item.Instr.Manager]
-					if !ok {
-						errChan <- fmt.Errorf("manager %s not found", item.Instr.Manager)
-					} else {
-						// Store the result in the correct index
-						cmd := mgr.GetCommand(e.Ctx, item.Instr)
-						instCopy := item.Instr
-
+					if mgr, ok := e.Managers[item.Instr.Manager]; ok {
 						results[item.Index] = &PlannedStep{
 							StageName:   item.StageName,
 							Name:        item.StepName,
-							Command:     cmd,
-							Instruction: &instCopy,
+							Command:     mgr.GetCommand(e.Env, item.Instr),
+							Instruction: &item.Instr,
 						}
 					}
 				}
-				progress <- ProgressMsg{Stage: item.StageName, Name: item.StepName, Status: StatusDone, Found: exists}
+
+				progress <- ProgressMsg{
+					Stage:  item.StageName,
+					Name:   item.StepName,
+					Status: StatusDone,
+					Found:  exists,
+				}
 			}
+			return nil
 		})
 	}
 
@@ -171,19 +196,12 @@ func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]Plann
 		jobs <- w
 	}
 	close(jobs)
-	wg.Wait()
-	close(progress)
-	close(errChan)
 
-	var errs []error
-	for err := range errChan {
-		errs = append(errs, err)
-	}
-	if len(errs) > 0 {
-		return nil, errors.Join(errs...)
+	if err := g.Wait(); err != nil {
+		progress <- ProgressMsg{Status: StatusFailed, Error: err}
+		return nil, err
 	}
 
-	// Compact the results
 	var finalSteps []PlannedStep
 	for _, res := range results {
 		if res != nil {
@@ -195,9 +213,9 @@ func (e *Engine) Plan(m manifest.Manifest, progress chan<- ProgressMsg) ([]Plann
 }
 
 // checkExistence abstracts the logic for checking if a package exists.
-func (e *Engine) checkExistence(instr manifest.Instruction) (bool, error) {
+func (e *Engine) checkExistence(ctx context.Context, instr manifest.Instruction) (bool, error) {
 	if instr.CheckCmd != "" {
-		_, err := e.Ctx.Shell.Output("sh", []string{"-c", instr.CheckCmd}, e.Ctx.PATH)
+		_, err := e.Env.Shell.Output(ctx, "sh", []string{"-c", instr.CheckCmd}, e.Env.PATH)
 		return (err == nil), nil
 	}
 
@@ -207,7 +225,7 @@ func (e *Engine) checkExistence(instr manifest.Instruction) (bool, error) {
 	}
 
 	if mgr, ok := e.Managers[instr.Manager]; ok {
-		return mgr.Exists(e.Ctx, instr), nil
+		return mgr.Exists(ctx, e.Env, instr), nil
 	}
 
 	return false, fmt.Errorf("no manager found for %s", instr.Manager)
@@ -215,11 +233,13 @@ func (e *Engine) checkExistence(instr manifest.Instruction) (bool, error) {
 
 // Execute runs the steps sequentially (installations are risky to run in parallel due to lock files)
 // but reports progress to the UI channel.
-func (e *Engine) Execute(steps []PlannedStep, progress chan<- ProgressMsg) error {
-	defer close(progress)
-
-	total := len(steps)
+func (e *Engine) Execute(ctx context.Context, steps []PlannedStep, progress chan<- ProgressMsg) error {
+	totalSteps := len(steps)
 	for i, step := range steps {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+
 		instruction := *step.Instruction
 		manager := e.Managers[instruction.Manager]
 
@@ -229,7 +249,7 @@ func (e *Engine) Execute(steps []PlannedStep, progress chan<- ProgressMsg) error
 				Status:  StatusInstalling,
 				Details: line,
 				Current: i + 1,
-				Total:   total,
+				Total:   totalSteps,
 			}
 		}
 
@@ -239,12 +259,11 @@ func (e *Engine) Execute(steps []PlannedStep, progress chan<- ProgressMsg) error
 				Status:  "Running Pre-hooks",
 				Details: "Setting up dependencies...",
 				Current: i + 1,
-				Total:   total,
+				Total:   totalSteps,
 			}
 
 			for _, cmd := range instruction.Hooks.Before {
-				// Use the shell to run the hook
-				if err := e.Ctx.Shell.Run("sh", []string{"-c", cmd}, e.Ctx.PATH, notify); err != nil {
+				if err := e.Env.Shell.Run(ctx, "sh", []string{"-c", cmd}, e.Env.PATH, notify); err != nil {
 					return fmt.Errorf("step '%s' pre-hook failed: %w", step.Name, err)
 				}
 			}
@@ -255,26 +274,32 @@ func (e *Engine) Execute(steps []PlannedStep, progress chan<- ProgressMsg) error
 			Status:  StatusInstalling,
 			Details: instruction.Manager,
 			Current: i + 1,
-			Total:   total,
+			Total:   totalSteps,
 		}
 
-		if err := manager.Install(e.Ctx, instruction, notify); err != nil {
+		if err := manager.Install(ctx, e.Env, instruction, notify); err != nil {
 			slog.Error("install failed", "step", step.Name, "error", err)
 			progress <- ProgressMsg{
 				Name:    step.Name,
 				Status:  StatusFailed,
 				Error:   err,
 				Current: i + 1,
-				Total:   total,
+				Total:   totalSteps,
 			}
 			return fmt.Errorf("step '%s' failed: %w", step.Name, err)
 		}
 
 		if len(instruction.Hooks.After) > 0 {
-			progress <- ProgressMsg{Name: step.Name, Status: "Running Hooks"}
+			progress <- ProgressMsg{
+				Name:    step.Name,
+				Status:  "Running Post-hooks",
+				Details: "",
+				Current: i + 1,
+				Total:   totalSteps,
+			}
 			for _, cmd := range instruction.Hooks.After {
-				if err := e.Ctx.Shell.Run("sh", []string{"-c", cmd}, e.Ctx.PATH, notify); err != nil {
-					return fmt.Errorf("step '%s' hook failed: %w", step.Name, err)
+				if err := e.Env.Shell.Run(ctx, "sh", []string{"-c", cmd}, e.Env.PATH, notify); err != nil {
+					return fmt.Errorf("step '%s' post-hook failed: %w", step.Name, err)
 				}
 			}
 		}
@@ -283,7 +308,7 @@ func (e *Engine) Execute(steps []PlannedStep, progress chan<- ProgressMsg) error
 			Name:    step.Name,
 			Status:  StatusDone,
 			Current: i + 1,
-			Total:   len(steps),
+			Total:   totalSteps,
 		}
 	}
 	return nil

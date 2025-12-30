@@ -1,6 +1,7 @@
 package managers
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,17 +13,21 @@ import (
 
 type Symlink struct{}
 
+// RequiresPrivilege returns false as symlinks are typically managed in user space.
+func (m *Symlink) RequiresPrivilege(instruction manifest.Instruction) bool {
+	return false
+}
+
 // resolve returns the absolute source and expanded target for a single link
-func (m *Symlink) resolve(source, target string) (string, string, error) {
-	cwd, err := os.Getwd()
+func (m *Symlink) resolve(env engine.Env, source, target string) (string, string, error) {
+	cwd, err := env.FS.Getwd()
 	if err != nil {
 		return "", "", err
 	}
-	repoRoot := filepath.Dir(cwd) // Go up one level from dotty/
+	repoRoot := filepath.Dir(cwd)
 	absSource := filepath.Join(repoRoot, source)
 
-	// Expand ~
-	home, err := os.UserHomeDir()
+	home, err := env.FS.UserHomeDir()
 	if err != nil {
 		return "", "", err
 	}
@@ -38,19 +43,23 @@ func (m *Symlink) resolve(source, target string) (string, string, error) {
 	return absSource, target, nil
 }
 
-func (m *Symlink) Exists(ctx engine.Context, instruction manifest.Instruction) bool {
+func (m *Symlink) Exists(ctx context.Context, env engine.Env, instruction manifest.Instruction) bool {
 	if len(instruction.Links) == 0 {
 		return true // Nothing to link, so "complete"
 	}
 
 	for _, link := range instruction.Links {
-		absSource, absTarget, err := m.resolve(link.Source, link.Target)
+		if ctx.Err() != nil {
+			return false
+		}
+
+		absSource, absTarget, err := m.resolve(env, link.Source, link.Target)
 		if err != nil {
 			return false
 		}
 
 		// Check if target exists
-		info, err := os.Lstat(absTarget)
+		info, err := env.FS.Lstat(absTarget)
 		if err != nil {
 			return false
 		}
@@ -61,7 +70,7 @@ func (m *Symlink) Exists(ctx engine.Context, instruction manifest.Instruction) b
 		}
 
 		// Check destination
-		dest, err := os.Readlink(absTarget)
+		dest, err := env.FS.Readlink(absTarget)
 		if err != nil {
 			return false
 		}
@@ -74,7 +83,7 @@ func (m *Symlink) Exists(ctx engine.Context, instruction manifest.Instruction) b
 	return true
 }
 
-func (m *Symlink) GetCommand(ctx engine.Context, instruction manifest.Instruction) string {
+func (m *Symlink) GetCommand(env engine.Env, instruction manifest.Instruction) string {
 	if len(instruction.Links) == 1 {
 		return fmt.Sprintf("ln -sf %s %s", instruction.Links[0].Source, instruction.Links[0].Target)
 	}
@@ -93,27 +102,28 @@ func (m *Symlink) GetCommand(ctx engine.Context, instruction manifest.Instructio
 	return fmt.Sprintf("ln -sf [%s] (%d files)", strings.Join(names, ", "), len(instruction.Links))
 }
 
-func (m *Symlink) Install(ctx engine.Context, instruction manifest.Instruction, onLine func(string)) error {
+func (m *Symlink) Install(ctx context.Context, env engine.Env, instruction manifest.Instruction, onLine func(string)) error {
 	for _, link := range instruction.Links {
-		absSource, absTarget, err := m.resolve(link.Source, link.Target)
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+
+		absSource, absTarget, err := m.resolve(env, link.Source, link.Target)
 		if err != nil {
 			return err
 		}
 
-		// Create Parent Dir
-		if err := os.MkdirAll(filepath.Dir(absTarget), 0o755); err != nil {
+		if err := env.FS.MkdirAll(filepath.Dir(absTarget), 0o755); err != nil { // Use FS
 			return fmt.Errorf("mkdir failed for %s: %w", absTarget, err)
 		}
 
-		// Force Remove Existing
-		if _, err := os.Lstat(absTarget); err == nil {
-			if err := os.Remove(absTarget); err != nil {
+		if _, err := env.FS.Lstat(absTarget); err == nil {
+			if err := env.FS.Remove(absTarget); err != nil { // Use FS
 				return fmt.Errorf("failed to remove %s: %w", absTarget, err)
 			}
 		}
 
-		// Link
-		if err := os.Symlink(absSource, absTarget); err != nil {
+		if err := env.FS.Symlink(absSource, absTarget); err != nil { // Use FS
 			return fmt.Errorf("symlink failed %s -> %s: %w", absSource, absTarget, err)
 		}
 	}

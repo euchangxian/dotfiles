@@ -2,6 +2,7 @@
 package managers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -10,103 +11,102 @@ import (
 	"dotty/manifest"
 )
 
-type Shell struct{}
+// base provides a common implementation for shell-based managers to reduce boilerplate.
+type base struct {
+	installArgs func(manifest.Instruction) (string, []string)
+}
 
-func (m *Shell) Exists(ctx engine.Context, instruction manifest.Instruction) bool {
+// RequiresPrivilege defaults to false.
+// Specific managers (like DNF) can override this.
+func (b *base) RequiresPrivilege(instr manifest.Instruction) bool {
+	return false
+}
+
+// GetCommand provides a consistent way to display the command that will be run.
+func (b *base) GetCommand(env engine.Env, instruction manifest.Instruction) string {
+	name, args := b.installArgs(instruction)
+	return fmt.Sprintf("%s %s", name, strings.Join(args, " "))
+}
+
+// Install provides a shared execution loop using the engine's shell.
+func (b *base) Install(ctx context.Context, env engine.Env, instr manifest.Instruction, onLine func(string)) error {
+	name, args := b.installArgs(instr)
+	return env.Shell.Run(ctx, name, args, env.PATH, onLine)
+}
+
+type Shell struct{ base }
+
+func NewShell() *Shell {
+	m := &Shell{}
+	m.installArgs = func(instr manifest.Instruction) (string, []string) {
+		return "sh", []string{"-c", instr.InstallCmd}
+	}
+	return m
+}
+
+func (m *Shell) Exists(ctx context.Context, env engine.Env, instruction manifest.Instruction) bool {
 	if instruction.CheckCmd == "" {
-		// If there is no check command, assume it's not installed/needs running.
 		return false
 	}
-
-	// use "sh -c" to allow piping and complex commands in the YAML check string
-	// e.g. "dnf repolist | grep rpmfusion"
-	_, err := ctx.Shell.Output("sh", []string{"-c", instruction.CheckCmd}, ctx.PATH)
+	_, err := env.Shell.Output(ctx, "sh", []string{"-c", instruction.CheckCmd}, env.PATH)
 	return err == nil
 }
 
-func (m *Shell) getInstallArgs(instruction manifest.Instruction) (string, []string) {
-	return "sh", []string{"-c", instruction.InstallCmd}
-}
-
-func (m *Shell) GetCommand(ctx engine.Context, instruction manifest.Instruction) string {
-	// For Shell, we return the raw command for display if possible, or the full sh -c wrapper
-	// To be strictly consistent with the refactor pattern:
-	name, args := m.getInstallArgs(instruction)
-	return fmt.Sprintf("%s %s", name, strings.Join(args, " "))
-}
-
-func (m *Shell) Install(ctx engine.Context, instruction manifest.Instruction, onLine func(string)) error {
-	if instruction.InstallCmd == "" {
+func (m *Shell) Install(ctx context.Context, env engine.Env, instr manifest.Instruction, onLine func(string)) error {
+	if instr.InstallCmd == "" {
 		return errors.New("shell manager requires an 'install' command")
 	}
-	name, args := m.getInstallArgs(instruction)
-	return ctx.Shell.Run(name, args, ctx.PATH, onLine)
+	return m.base.Install(ctx, env, instr, onLine)
 }
 
-type Dnf struct{}
+type Dnf struct{ base }
 
-func (m *Dnf) Exists(ctx engine.Context, instruction manifest.Instruction) bool {
-	_, err := ctx.Shell.Output("rpm", []string{"-q", instruction.Package}, ctx.PATH)
+func NewDnf() *Dnf {
+	m := &Dnf{}
+	m.installArgs = func(instr manifest.Instruction) (string, []string) {
+		return "sudo", []string{"dnf", "install", "-y", instr.Package}
+	}
+	return m
+}
+
+func (m *Dnf) RequiresPrivilege(instr manifest.Instruction) bool {
+	return true // DNF installs requires sudo
+}
+
+func (m *Dnf) Exists(ctx context.Context, env engine.Env, instruction manifest.Instruction) bool {
+	_, err := env.Shell.Output(ctx, "rpm", []string{"-q", instruction.Package}, env.PATH)
 	return err == nil
 }
 
-func (m *Dnf) getInstallArgs(instruction manifest.Instruction) (string, []string) {
-	return "sudo", []string{"dnf", "install", "-y", instruction.Package}
+type Homebrew struct{ base }
+
+func NewHomebrew() *Homebrew {
+	m := &Homebrew{}
+	m.installArgs = func(instr manifest.Instruction) (string, []string) {
+		return "brew", []string{"install", instr.Package}
+	}
+	return m
 }
 
-func (m *Dnf) GetCommand(ctx engine.Context, instruction manifest.Instruction) string {
-	name, args := m.getInstallArgs(instruction)
-	return fmt.Sprintf("%s %s", name, strings.Join(args, " "))
-}
-
-func (m *Dnf) Install(ctx engine.Context, instruction manifest.Instruction, onLine func(string)) error {
-	name, args := m.getInstallArgs(instruction)
-	return ctx.Shell.Run(name, args, ctx.PATH, onLine)
-}
-
-type Homebrew struct{}
-
-func (m *Homebrew) Exists(ctx engine.Context, instruction manifest.Instruction) bool {
-	// "brew list <package>" returns 0 if installed (works for formulae and casks)
-	_, err := ctx.Shell.Output("brew", []string{"list", instruction.Package}, ctx.PATH)
+func (m *Homebrew) Exists(ctx context.Context, env engine.Env, instruction manifest.Instruction) bool {
+	_, err := env.Shell.Output(ctx, "brew", []string{"list", instruction.Package}, env.PATH)
 	return err == nil
 }
 
-func (m *Homebrew) getInstallArgs(instruction manifest.Instruction) (string, []string) {
-	return "brew", []string{"install", instruction.Package}
+type Cargo struct{ base }
+
+func NewCargo() *Cargo {
+	m := &Cargo{}
+	m.installArgs = func(instr manifest.Instruction) (string, []string) {
+		return "cargo", []string{"install", "--locked", instr.Package}
+	}
+	return m
 }
 
-func (m *Homebrew) GetCommand(ctx engine.Context, instruction manifest.Instruction) string {
-	name, args := m.getInstallArgs(instruction)
-	return fmt.Sprintf("%s %s", name, strings.Join(args, " "))
-}
-
-func (m *Homebrew) Install(ctx engine.Context, instruction manifest.Instruction, onLine func(string)) error {
-	name, args := m.getInstallArgs(instruction)
-	return ctx.Shell.Run(name, args, ctx.PATH, onLine)
-}
-
-type Cargo struct{}
-
-func (m *Cargo) Exists(ctx engine.Context, instruction manifest.Instruction) bool {
-	// cargo install --list returns installed packages. grep for the specific one.
-	out, err := ctx.Shell.Output("cargo", []string{"install", "--list"}, ctx.PATH)
+func (m *Cargo) Exists(ctx context.Context, env engine.Env, instruction manifest.Instruction) bool {
+	out, err := env.Shell.Output(ctx, "cargo", []string{"install", "--list"}, env.PATH)
 	if err != nil {
 		return false
 	}
 	return strings.Contains(out, instruction.Package+" v")
-}
-
-func (m *Cargo) getInstallArgs(instruction manifest.Instruction) (string, []string) {
-	return "cargo", []string{"install", "--locked", instruction.Package}
-}
-
-func (m *Cargo) GetCommand(ctx engine.Context, instruction manifest.Instruction) string {
-	name, args := m.getInstallArgs(instruction)
-	return fmt.Sprintf("%s %s", name, strings.Join(args, " "))
-}
-
-func (m *Cargo) Install(ctx engine.Context, instruction manifest.Instruction, onLine func(string)) error {
-	name, args := m.getInstallArgs(instruction)
-	return ctx.Shell.Run(name, args, ctx.PATH, onLine)
 }
