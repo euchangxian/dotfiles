@@ -117,14 +117,17 @@ zstyle ':fzf-tab:*' switch-group '<' '>'
 #                              Helper Functions
 # =============================================================================
 RED="\e[31m"
-MAGENTA="\e[35m"
-YELLOW="\e[33m"
 GREEN="\e[32m"
+YELLOW="\e[33m"
+BLUE="\e[34m"
+MAGENTA="\e[35m"
+CYAN="\e[36m"
 NC="\e[0m"
 
 function info() { echo -e "[${GREEN}INFO${NC}] $@" ; }
 function debug() { echo -e "[${MAGENTA}DEBUG${NC}] $@" ; }
 function warn() { echo -e "[${YELLOW}WARN${NC}] $@" ; }
+function run_cmd() { echo -e "[${CYAN}CMD${NC}] $@" ; "$@" ; }
 function error() { echo -e "[${RED}ERROR${NC}] $@" >&2 ; }
 
 # --- Cross-Platform Clipboard Helper ---
@@ -177,6 +180,10 @@ bindkey '^o' bufftoclip
 # =============================================================================
 #                                Tool Functions
 # =============================================================================
+
+function cargo-update() {
+  run_cmd cargo install $(cargo install --list | awk '/:$/ { print $1; }')
+}
 
 # FZF (Fuzzy Finder) Functions
 # Use fd (https://github.com/sharkdp/fd) for listing path candidates.
