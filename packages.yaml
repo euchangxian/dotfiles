@@ -42,8 +42,8 @@ stages:
           darwin: { manager: brew, package: nvm }
           fedora:
             manager: shell
-            check: "test -d $HOME/.nvm"
-            install: "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash"
+            check: command -v nvm &> /dev/null
+            install: "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
 
       - name: uv
         description: "Python package installer and resolver"
@@ -134,6 +134,12 @@ stages:
           darwin: { manager: brew, package: bottom }
           fedora: { manager: cargo, package: bottom }
 
+      - name: dust
+        description: "Modern du"
+        instructions:
+          darwin: { manager: brew, package: dust }
+          fedora: { manager: cargo, package: dust }
+
       - name: jq
         description: "Command-line JSON processor"
         instructions:
@@ -143,11 +149,6 @@ stages:
   - name: utils
     description: "Standard CLI Tools"
     steps:
-      - name: tree
-        description: "Show directory structure"
-        instructions:
-          darwin: { manager: brew, package: tree }
-
       - name: wget
         instructions:
           darwin: { manager: brew, package: wget }

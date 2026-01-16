@@ -229,65 +229,68 @@ function jwt() {
 }
 
 function runcpp() {
-    if [[ "$#" -eq 0 ]]; then
-      error "Usage: runcpp <FILE_NAME>";
-      return 1;
-    fi
+  if [[ "$#" -eq 0 ]]; then
+    error "Usage: runcpp <FILE_NAME>";
+    return 1;
+  fi
 
-    local cpp_file="$1"
-    local executable="${cpp_file%.cpp}"
-    if clang++ -std=c++23 -stdlib=libc++ -fexperimental-library -O3 -DDEBUG -o "$executable" "$cpp_file"; then
-        ./"$executable"
-        rm "$executable"
-    else
-        error "Compilation failed"; return 1
-    fi
+  local cpp_file="$1"
+  local executable="${cpp_file%.cpp}.out"
+  if clang++ -std=c++23 -stdlib=libc++ -fexperimental-library -O3 -DDEBUG -o "$executable" "$cpp_file"; then
+    ./"$executable"
+    rm "$executable"
+  else
+    error "Compilation failed";
+    return 1;
+  fi
 }
 
 function runrs() {
-    if [[ "$#" -eq 0 ]]; then
-      error "Usage: runrs <FILE_NAME>";
-      return 1;
-    fi
+  if [[ "$#" -eq 0 ]]; then
+    error "Usage: runrs <FILE_NAME>";
+    return 1;
+  fi
 
-    local rust_file="$1"
-    local executable="${rust_file%.rs}"
-    if rustc -O -o "$executable" "$rust_file"; then
-        ./"$executable"
-        rm "$executable"
-    else
-        error "Compilation failed"; return 1
-    fi
+  local rust_file="$1"
+  local executable="${rust_file%.rs}.out"
+  if rustc -O -o "$executable" "$rust_file"; then
+    ./"$executable"
+    rm "$executable"
+  else
+    error "Compilation failed";
+    return 1
+  fi
 }
 
 function runocaml() {
-    if [[ "$#" -eq 0 ]]; then echo "Usage: runocaml <FILE_NAME>"; return 1; fi
-    local ocaml_file="$1"
-    local executable="${ocaml_file%.ml}"
-    if ocamlopt -o "$executable" "$ocaml_file"; then
-        ./"$executable"
-        rm "$executable"
-    else
-        error "Compilation failed"; return 1
-    fi
+  if [[ "$#" -eq 0 ]]; then echo "Usage: runocaml <FILE_NAME>"; return 1; fi
+  local ocaml_file="$1"
+  local executable="${ocaml_file%.ml}.out"
+  if ocamlopt -o "$executable" "$ocaml_file"; then
+    ./"$executable"
+    rm "$executable"
+  else
+    error "Compilation failed";
+    return 1
+  fi
 }
 
 # Function to sync a directory with a remote host using fswatch
 function syncdir() {
-    local LOCAL_DIR="$1"
-    local REMOTE_DIR="$2"
+  local LOCAL_DIR="$1"
+  local REMOTE_DIR="$2"
 
-    if [[ -z "$LOCAL_DIR" || -z "$REMOTE_DIR" ]]; then
-      error "Usage: syncdir <LOCAL_DIR> <REMOTE_DIR>";
-      return 1;
-    fi
+  if [[ -z "$LOCAL_DIR" || -z "$REMOTE_DIR" ]]; then
+    error "Usage: syncdir <LOCAL_DIR> <REMOTE_DIR>";
+    return 1;
+  fi
 
-    info "Starting to watch $LOCAL_DIR and sync with $REMOTE_DIR..."
+  info "Starting to watch $LOCAL_DIR and sync with $REMOTE_DIR..."
 
-    fswatch -o "$LOCAL_DIR" | while read change; do
-        rsync -avz --exclude='.git/' "$LOCAL_DIR/" "$REMOTE_DIR"
-        info "Synced changes from $LOCAL_DIR to $REMOTE_DIR"
-    done
+  fswatch -o "$LOCAL_DIR" | while read change; do
+    rsync -avz --exclude='.git/' "$LOCAL_DIR/" "$REMOTE_DIR"
+    info "Synced changes from $LOCAL_DIR to $REMOTE_DIR"
+  done
 }
 
 # =============================================================================
@@ -329,6 +332,7 @@ alias cat='bat'
 
 # alias ls='eza --grid --color=always --icons=always --long --git --no-filesize --no-time --no-user --no-permissions'
 alias ls='eza --grid --color=always --icons=always'
+alias tree='eza --tree'
 
 alias cdr='cd $(git rev-parse --show-toplevel)'
 
@@ -338,3 +342,4 @@ eval "$(starship init zsh)"
 # Zoxide - fast cd
 export _ZO_DATA_DIR="$XDG_DATA_HOME"
 eval "$(zoxide init zsh)"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion

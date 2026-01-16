@@ -113,17 +113,17 @@ func (m *Symlink) Install(ctx context.Context, env engine.Env, instruction manif
 			return err
 		}
 
-		if err := env.FS.MkdirAll(filepath.Dir(absTarget), 0o755); err != nil { // Use FS
+		if err := env.FS.MkdirAll(filepath.Dir(absTarget), 0o755); err != nil {
 			return fmt.Errorf("mkdir failed for %s: %w", absTarget, err)
 		}
 
 		if _, err := env.FS.Lstat(absTarget); err == nil {
-			if err := env.FS.Remove(absTarget); err != nil { // Use FS
+			if err := env.FS.Remove(absTarget); err != nil {
 				return fmt.Errorf("failed to remove %s: %w", absTarget, err)
 			}
 		}
 
-		if err := env.FS.Symlink(absSource, absTarget); err != nil { // Use FS
+		if err := env.FS.Symlink(absSource, absTarget); err != nil {
 			return fmt.Errorf("symlink failed %s -> %s: %w", absSource, absTarget, err)
 		}
 	}
