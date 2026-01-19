@@ -17,7 +17,7 @@ stages:
             package: "@development-tools"
 
   - name: toolchains
-    description: "Compilers and Interpreters"
+    description: "Compilers, Interpreters, Tools"
     steps:
       - name: rust
         env_update: true
@@ -61,6 +61,21 @@ stages:
         env_update: true
         instructions:
           fedora: { manager: dnf, package: clang }
+
+      - name: clang-tools
+        instructions:
+          fedora: { manager: dnf, package: clang-tools-extra }
+
+      - name: ninja
+        description: "build system"
+        instructions:
+          darwin: { manager: brew, package: ninja }
+          fedora: { manager: dnf, package: ninja-build }
+
+      - name: boost
+        description: "C++ Boost Library"
+        instructions:
+          fedora: { manager: dnf, package: boost-devel }
 
   - name: core
     description: "Modern Unix Utilities"
