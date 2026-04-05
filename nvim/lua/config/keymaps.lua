@@ -16,7 +16,7 @@ vim.keymap.set("n", "<leader>td", function()
 end, { desc = "Paste Directions template" })
 
 vim.keymap.set("n", "<leader>tD", function()
-  paste_template("Debug.cpp")
+  paste_template("Debug.hpp")
 end, { desc = "Paste Debugging template" })
 
 vim.keymap.set("n", "<leader>tu", function()
@@ -36,7 +36,7 @@ vim.keymap.set("n", "<leader>ts", function()
 end, { desc = "Paste Segment Tree template" })
 
 vim.keymap.set("n", "<leader>tm", function()
-  paste_template("ModNum.cpp")
+  paste_template("ModNum.hpp")
 end, { desc = "Paste Mod Num template" })
 
 vim.keymap.set("n", "<leader>tM", function()

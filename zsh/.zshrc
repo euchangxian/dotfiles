@@ -245,6 +245,34 @@ function runcpp() {
   fi
 }
 
+function rungpp() {
+  if [[ "$#" -eq 0 ]]; then
+    error "Usage: rungpp <FILE_NAME>";
+    return 1;
+  fi
+
+  local -a comp_flags=(
+    -std=c++23
+    -stdlib=libstdc++
+    -O3
+    -DDEBUG
+    -I/opt/homebrew/include
+    -L/opt/homebrew/lib
+    -I/opt/homebrew/Cellar/boost/1.90.0/include
+    -lsimdjson
+  )
+
+  local cpp_file="$1"
+  local executable="${cpp_file%.cpp}.out"
+  if /opt/homebrew/bin/g++-15 "${comp_flags[@]}" -o "$executable" "$cpp_file"; then
+    ./"$executable"
+    rm "$executable"
+  else
+    error "Compilation failed";
+    return 1;
+  fi
+}
+
 function runrs() {
   if [[ "$#" -eq 0 ]]; then
     error "Usage: runrs <FILE_NAME>";
@@ -343,3 +371,10 @@ eval "$(starship init zsh)"
 export _ZO_DATA_DIR="$XDG_DATA_HOME"
 eval "$(zoxide init zsh)"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

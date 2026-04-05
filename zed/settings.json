@@ -7,19 +7,20 @@
 // custom settings, run the `zed: Open Default Settings` command
 // from the command palette
 {
+  "icon_theme": "Zed (Default)",
   "base_keymap": "JetBrains",
   "telemetry": {
     "diagnostics": false,
     "metrics": false
   },
   "vim_mode": true,
-  "ui_font_size": 13,
-  "buffer_font_size": 13,
+  "ui_font_size": 14.0,
+  "buffer_font_size": 14.0,
   "tab_size": 2,
   "theme": {
     "mode": "system",
     "light": "One Light",
-    "dark": "Tokyo Night Storm"
+    "dark": "Catppuccin Frappé - No Italics"
   },
   "terminal": {
     "font_family": "MesloLGS NF",
@@ -42,15 +43,6 @@
     "Markdown": {
       "format_on_save": "on",
       "use_on_type_format": true
-    }
-  },
-  "lsp": {
-    "terraform-ls": {
-      "initialization_options": {
-        "experimentalFeatures": {
-          "prefillRequiredFields": true
-        }
-      }
     }
   }
 }

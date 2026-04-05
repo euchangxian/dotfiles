@@ -1,3 +1,8 @@
 CompileFlags:
   Compiler: clang++
-  Add: ["-std=c++23", "-I/opt/homebrew/include"]
+  Add:
+    [
+      "-std=c++23",
+      "-I/opt/homebrew/include",
+      "-I/opt/homebrew/Cellar/boost/1.90.0/include",
+    ]
