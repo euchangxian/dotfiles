@@ -1,12 +1,10 @@
 lastupdatecheck: 0
 recentrepos:
-    - /Users/euchangxian/Desktop/CS4212/Homework/hw6-analysis-analysisses
-    - /Users/euchangxian/Desktop/CS4223/Assignments/A2/cs4223-assignment2
-    - /Users/euchangxian/Desktop/CS4212/Homework/hw2-x86lite-meowmeowmeow
     - /Users/euchangxian/LeetCode
     - /Users/euchangxian/dotfiles
 startuppopupversion: 5
 didshowhunkstaginghint: false
-lastversion: 0.56.0
+lastversion: 0.61.1
 customcommandshistory: []
-hidecommandlog: false
+hidecommandlog: true
+githubPullRequests: {}

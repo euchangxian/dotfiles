@@ -146,15 +146,6 @@ function _copy_cmd() {
   fi
 }
 
-# Make and Change Directory (take makes this obsolete, but muscle memory...)
-function mkcdir () {
-  if [ "$#" -ne 1 ]; then
-    error "usage: mkcdir <DIRECTORY_NAME>";
-    return 1;
-  fi
-  mkdir -p "$1" && cd "$1"
-}
-
 # Copy file content to clipboard
 function clip () {
   if [ "$#" -ne 1 ]; then
