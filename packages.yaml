@@ -19,6 +19,14 @@ stages:
   - name: toolchains
     description: "Compilers, Interpreters, Tools"
     steps:
+      - name: akmod-nvidia
+        instructions:
+          fedora: { manager: dnf, package: akmod-nvidia }
+
+      - name: xorg-x11-drv-nvidia-cuda
+        instructions:
+          fedora: { manager: dnf, package: xorg-x11-drv-nvidia-cuda }
+
       - name: rust
         env_update: true
         instructions:
@@ -42,7 +50,10 @@ stages:
           darwin: { manager: brew, package: nvm }
           fedora:
             manager: shell
-            check: command -v nvm &> /dev/null
+            check: |
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+              command -v nvm
             install: "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
 
       - name: uv
@@ -76,6 +87,24 @@ stages:
         description: "C++ Boost Library"
         instructions:
           fedora: { manager: dnf, package: boost-devel }
+
+      - name: llama.cpp
+        description: "LLM Inference"
+        instructions:
+          fedora:
+            manager: shell
+            check: command -v llama-cli &> /dev/null
+            install: |
+              pushd "$HOME"
+              if [[ ! -d "llama.cpp" ]]; then
+                git clone https://github.com/ggml-org/llama.cpp
+              fi
+              pushd cd llama.cpp
+              cmake -B build -DGGML_CUDA=ON -DBUILD_SHARED_LIBS=OFF
+              cmake --build build --config Release -j$(nproc)
+              sudo cmake --install build --prefix "/usr/local"
+              popd
+              popd
 
   - name: core
     description: "Modern Unix Utilities"
@@ -153,7 +182,7 @@ stages:
         description: "Modern du"
         instructions:
           darwin: { manager: brew, package: dust }
-          fedora: { manager: cargo, package: dust }
+          fedora: { manager: cargo, package: du-dust }
 
       - name: jq
         description: "Command-line JSON processor"
