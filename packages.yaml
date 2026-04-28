@@ -207,14 +207,6 @@ stages:
           darwin: { manager: brew, package: podman }
           fedora: { manager: dnf, package: podman }
 
-      - name: rclone
-        instructions:
-          darwin:
-            manager: brew
-            check: command -v rclone &> /dev/null
-            package: rclone
-          fedora: { manager: dnf, package: rclone }
-
   - name: apps
     description: "Editors, Shell, and Terminal"
     steps:
@@ -264,10 +256,6 @@ stages:
           darwin: { manager: brew, package: dprint }
           fedora: { manager: cargo, package: dprint }
 
-      - name: tmux
-        instructions:
-          darwin: { manager: brew, package: tmux }
-
       - name: zsh-autosuggestions
         description: "Fish-like autosuggestions for Zsh"
         instructions:
@@ -316,7 +304,6 @@ stages:
                   source: "git/.gitignore_global",
                   target: "~/.gitignore_global",
                 }
-              - { source: "tmux/.tmux.conf", target: "~/.tmux.conf" }
           darwin:
             manager: symlink
             links:
@@ -337,7 +324,6 @@ stages:
               - { source: "fzf-git.sh", target: "~/.config/fzf-git.sh" }
               - { source: "fzf-tab", target: "~/.config/fzf-tab" }
               - { source: "bat", target: "~/.config/bat" }
-              - { source: "rclone", target: "~/.config/rclone" }
               - {
                   source: "pokemon-colorscripts",
                   target: "~/.config/pokemon-colorscripts",
@@ -353,7 +339,3 @@ stages:
           darwin:
             manager: symlink
             links:
-              - {
-                  source: "macos/Library/Preferences/clangd/config.yaml",
-                  target: "/Library/Preferences/clangd/config.yaml",
-                }
